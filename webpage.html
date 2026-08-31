@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PharmaCare - Pharmacy Management System</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f8fb;
+            color: #263238;
+        }
+
+        /* ================= SIDEBAR ================= */
+
+        .sidebar {
+            position: fixed;
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(180deg, #075985, #0891b2);
+            color: white;
+            padding: 25px 18px;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo-icon {
+            width: 65px;
+            height: 65px;
+            margin: auto;
+            border-radius: 20px;
+            background: white;
+            color: #0284c7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .logo h2 {
+            margin-top: 12px;
+            font-size: 23px;
+        }
+
+        .logo p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            opacity: 0.7;
+            margin: 20px 12px 10px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            padding: 13px 15px;
+            margin: 7px 0;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: rgba(255, 255, 255, 0.20);
+            transform: translateX(4px);
+        }
+
+        .side-icon {
+            font-size: 19px;
+        }
+
+        .logout {
+            position: absolute;
+            bottom: 25px;
+            left: 18px;
+            right: 18px;
+        }
+
+        /* ================= MAIN ================= */
+
+        .main {
+            margin-left: 250px;
+            padding: 30px 38px;
+        }
+
+        /* ================= TOP HEADER ================= */
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .welcome h1 {
+            font-size: 34px;
+            font-weight: 800;
+            background: linear-gradient(
+                90deg,
+                #075985,
+                #0891b2,
+                #14b8a6
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome h1::after {
+            content: "";
+            display: block;
+            width: 80px;
+            height: 5px;
+            margin-top: 8px;
+            border-radius: 10px;
+            background: linear-gradient(
+                90deg,
+                #f59e0b,
+                #ef4444
+            );
+        }
+
+        .welcome p {
+            margin-top: 12px;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .admin {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: white;
+            padding: 9px 17px 9px 9px;
+            border-radius: 35px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .admin-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(
+                135deg,
+                #a7f3d0,
+                #67e8f9
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .admin small {
+            color: #64748b;
+        }
+
+        /* ================= DASHBOARD CARDS ================= */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+            background: white;
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 7px 25px rgba(0, 0, 0, 0.07);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            right: -35px;
+            top: -35px;
+            opacity: 0.13;
+        }
+
+        .blue::before {
+            background: #2563eb;
+        }
+
+        .green::before {
+            background: #16a34a;
+        }
+
+        .orange::before {
+            background: #f97316;
+        }
+
+        .red::before {
+            background: #ef4444;
+        }
+
+        .purple::before {
+            background: #9333ea;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 27px;
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.10);
+        }
+
+        .icon-blue {
+            background: linear-gradient(135deg, #dbeafe, #60a5fa);
+        }
+
+        .icon-green {
+            background: linear-gradient(135deg, #dcfce7, #4ade80);
+        }
+
+        .icon-orange {
+            background: linear-gradient(135deg, #ffedd5, #fb923c);
+        }
+
+        .icon-red {
+            background: linear-gradient(135deg, #fee2e2, #f87171);
+        }
+
+        .icon-purple {
+            background: linear-gradient(135deg, #f3e8ff, #c084fc);
+        }
+
+        .card h4 {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 18px;
+        }
+
+        .card h2 {
+            font-size: 30px;
+            margin-top: 5px;
+            color: #172554;
+        }
+
+        .card span {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        /* ================= CONTENT ================= */
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 22px;
+        }
+
+        .box {
+            background: white;
+            border-radius: 20px;
+            padding: 23px;
+            box-shadow: 0 7px 25px rgba(0, 0, 0, 0.06);
+            margin-bottom: 22px;
+        }
+
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .box-header h3 {
+            font-size: 18px;
+            color: #17324d;
+        }
+
+        .view {
+            color: #0891b2;
+            font-size: 13px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        /* ================= TABLE ================= */
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            font-size: 11px;
+            color: #94a3b8;
+            padding: 11px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 15px 11px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .medicine {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .medicine-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+
+        .medicine-blue {
+            background: linear-gradient(
+                135deg,
+                #cffafe,
+                #bae6fd
+            );
+        }
+
+        .medicine-orange {
+            background: linear-gradient(
+                135deg,
+                #fef3c7,
+                #fdba74
+            );
+        }
+
+        .medicine-red {
+            background: linear-gradient(
+                135deg,
+                #fee2e2,
+                #fca5a5
+            );
+        }
+
+        .status {
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .available {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .low {
+            background: #ffedd5;
+            color: #c2410c;
+        }
+
+        .expiring {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        /* ================= EXPIRY SECTION ================= */
+
+        .expiry-box {
+            border-top: 5px solid #f59e0b;
+        }
+
+        .expiry-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .expiry-heading-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(
+                135deg,
+                #fef3c7,
+                #fbbf24
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+        }
+
+        .expiry-note {
+            background: #fff7ed;
+            border-radius: 10px;
+            padding: 10px 13px;
+            margin-bottom: 15px;
+            color: #9a3412;
+            font-size: 12px;
+        }
+
+        /* ================= FAST MOVING ================= */
+
+        .fast-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 19px;
+        }
+
+        .rank {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(
+                135deg,
+                #fef3c7,
+                #fbbf24
+            );
+            color: #92400e;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .fast-info {
+            flex: 1;
+        }
+
+        .fast-info strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .bar {
+            height: 7px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin-top: 7px;
+            overflow: hidden;
+        }
+
+        .bar span {
+            display: block;
+            height: 100%;
+            border-radius: 10px;
+        }
+
+        .bar-blue {
+            background: linear-gradient(
+                90deg,
+                #2563eb,
+                #06b6d4
+            );
+        }
+
+        .bar-green {
+            background: linear-gradient(
+                90deg,
+                #16a34a,
+                #14b8a6
+            );
+        }
+
+        .bar-orange {
+            background: linear-gradient(
+                90deg,
+                #f97316,
+                #facc15
+            );
+        }
+
+        .sold {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        /* ================= LOW STOCK ================= */
+
+        .alert {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 13px;
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            border-radius: 10px;
+            margin-bottom: 11px;
+        }
+
+        .alert-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: linear-gradient(
+                135deg,
+                #fed7aa,
+                #fb923c
+            );
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 19px;
+        }
+
+        .alert strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .alert small {
+            color: #64748b;
+        }
+
+        /* ================= BILLS ================= */
+
+        .bill {
+            display: flex;
+            justify-content: space-between;
+            padding: 13px 0;
+            border-bottom: 1px solid #edf1f3;
+        }
+
+        .bill-info strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .bill-info small {
+            color: #94a3b8;
+        }
+
+        .amount {
+            font-weight: bold;
+            color: #0891b2;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 1100px) {
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 750px) {
+
+            .sidebar {
+                width: 70px;
+                padding: 15px 8px;
+            }
+
+            .logo h2,
+            .logo p,
+            .menu-title,
+            .sidebar a span {
+                display: none;
+            }
+
+            .logo-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 25px;
+            }
+
+            .sidebar a {
+                justify-content: center;
+            }
+
+            .logout {
+                left: 8px;
+                right: 8px;
+            }
+
+            .main {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome h1 {
+                font-size: 26px;
+            }
+
+            .admin {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ================= SIDEBAR ================= -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+
+            <div class="logo-icon">
+                ⚕️
+            </div>
+
+            <h2>PharmaCare</h2>
+
+            <p>Pharmacy Management</p>
+
+        </div>
+
+
+        <div class="menu-title">
+            Main Menu
+        </div>
+
+
+        <a href="#" class="active">
+            <span class="side-icon">🏠</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">💊</span>
+            <span>Medicines</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">📦</span>
+            <span>Available Stock</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">🛒</span>
+            <span>Sold Stock</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">⚠️</span>
+            <span>Low Stock</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">⏳</span>
+            <span>Expiring Soon</span>
+        </a>
+
+
+        <div class="menu-title">
+            Management
+        </div>
+
+
+        <a href="#">
+            <span class="side-icon">👥</span>
+            <span>Customers</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">🧾</span>
+            <span>Bills</span>
+        </a>
+
+        <a href="#">
+            <span class="side-icon">📊</span>
+            <span>Reports</span>
+        </a>
+
+
+        <a href="#" class="logout">
+            <span class="side-icon">🚪</span>
+            <span>Logout</span>
+        </a>
+
+    </aside>
+
+
+    <!-- ================= MAIN CONTENT ================= -->
+
+    <main class="main">
+
+
+        <!-- HEADER -->
+
+        <div class="topbar">
+
+            <div class="welcome">
+
+                <h1>
+                    Pharmacy Dashboard 💊
+                </h1>
+
+                <p>
+                    Manage medicines, stock, sales, expiry dates and bills easily.
+                </p>
+
+            </div>
+
+
+            <div class="admin">
+
+                <div class="admin-icon">
+                    👨‍⚕️
+                </div>
+
+                <div>
+                    <strong>Administrator</strong>
+                    <br>
+                    <small>Pharmacy Admin</small>
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================= DASHBOARD CARDS ================= -->
+
+        <div class="cards">
+
+
+            <!-- TOTAL MEDICINES -->
+
+            <div class="card blue">
+
+                <div class="card-top">
+
+                    <div class="card-icon icon-blue">
+                        💊
+                    </div>
+
+                </div>
+
+                <h4>Total Medicines</h4>
+
+                <h2>120</h2>
+
+                <span>
+                    Medicines in system
+                </span>
+
+            </div>
+
+
+            <!-- AVAILABLE STOCK -->
+
+            <div class="card green">
+
+                <div class="card-top">
+
+                    <div class="card-icon icon-green">
+                        📦
+                    </div>
+
+                </div>
+
+                <h4>Available Stock</h4>
+
+                <h2>850</h2>
+
+                <span>
+                    Units available
+                </span>
+
+            </div>
+
+
+            <!-- SOLD -->
+
+            <div class="card orange">
+
+                <div class="card-top">
+
+                    <div class="card-icon icon-orange">
+                        🛒
+                    </div>
+
+                </div>
+
+                <h4>Sold Today</h4>
+
+                <h2>75</h2>
+
+                <span>
+                    Units sold today
+                </span>
+
+            </div>
+
+
+            <!-- LOW STOCK -->
+
+            <div class="card red">
+
+                <div class="card-top">
+
+                    <div class="card-icon icon-red">
+                        ⚠️
+                    </div>
+
+                </div>
+
+                <h4>Low Stock</h4>
+
+                <h2>08</h2>
+
+                <span>
+                    Medicines need attention
+                </span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ================= MAIN GRID ================= -->
+
+        <div class="content-grid">
+
+
+            <!-- ================= LEFT COLUMN ================= -->
+
+            <div>
+
+
+                <!-- AVAILABLE STOCK -->
+
+                <div class="box">
+
+                    <div class="box-header">
+
+                        <h3>
+                            📦 Available Stock
+                        </h3>
+
+                        <a href="#" class="view">
+                            View All →
+                        </a>
+
+                    </div>
+
+
+                    <table>
+
+                        <tr>
+
+                            <th>
+                                MEDICINE
+                            </th>
+
+                            <th>
+                                CATEGORY
+                            </th>
+
+                            <th>
+                                QUANTITY
+                            </th>
+
+                            <th>
+                                STATUS
+                            </th>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-blue">
+                                        💊
+                                    </div>
+
+                                    Paracetamol
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                Tablet
+                            </td>
+
+                            <td>
+                                150
+                            </td>
+
+                            <td>
+
+                                <span class="status available">
+                                    Available
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-blue">
+                                        💊
+                                    </div>
+
+                                    Cetirizine
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                Tablet
+                            </td>
+
+                            <td>
+                                80
+                            </td>
+
+                            <td>
+
+                                <span class="status available">
+                                    Available
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-blue">
+                                        🧴
+                                    </div>
+
+                                    ORS
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                Powder
+                            </td>
+
+                            <td>
+                                45
+                            </td>
+
+                            <td>
+
+                                <span class="status available">
+                                    Available
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-orange">
+                                        💊
+                                    </div>
+
+                                    Vitamin C
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                Tablet
+                            </td>
+
+                            <td>
+                                10
+                            </td>
+
+                            <td>
+
+                                <span class="status low">
+                                    Low Stock
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+
+
+                <!-- ================= EXPIRING SOON ================= -->
+
+                <div class="box expiry-box">
+
+                    <div class="box-header">
+
+                        <div class="expiry-heading">
+
+                            <div class="expiry-heading-icon">
+                                ⏳
+                            </div>
+
+                            <h3>
+                                Medicines Expiring Soon
+                            </h3>
+
+                        </div>
+
+                        <a href="#" class="view">
+                            View All →
+                        </a>
+
+                    </div>
+
+
+                    <div class="expiry-note">
+
+                        ⚠️ These medicines are close to their expiry date.
+                        Please check them before selling.
+
+                    </div>
+
+
+                    <table>
+
+                        <tr>
+
+                            <th>
+                                MEDICINE
+                            </th>
+
+                            <th>
+                                EXPIRY DATE
+                            </th>
+
+                            <th>
+                                STOCK
+                            </th>
+
+                            <th>
+                                STATUS
+                            </th>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-red">
+                                        💊
+                                    </div>
+
+                                    Amoxicillin
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                25-08-2026
+                            </td>
+
+                            <td>
+                                20
+                            </td>
+
+                            <td>
+
+                                <span class="status expiring">
+                                    Expiring Soon
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-orange">
+                                        💊
+                                    </div>
+
+                                    Vitamin C
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                02-09-2026
+                            </td>
+
+                            <td>
+                                35
+                            </td>
+
+                            <td>
+
+                                <span class="status expiring">
+                                    Expiring Soon
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+
+                        <tr>
+
+                            <td>
+
+                                <div class="medicine">
+
+                                    <div class="medicine-icon medicine-orange">
+                                        🧴
+                                    </div>
+
+                                    Cough Syrup
+
+                                </div>
+
+                            </td>
+
+                            <td>
+                                10-09-2026
+                            </td>
+
+                            <td>
+                                15
+                            </td>
+
+                            <td>
+
+                                <span class="status expiring">
+                                    Expiring Soon
+                                </span>
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                </div>
+
+
+
+                <!-- ================= FAST MOVING ================= -->
+
+                <div class="box">
+
+                    <div class="box-header">
+
+                        <h3>
+                            🚀 Fast Moving Medicines
+                        </h3>
+
+                        <a href="#" class="view">
+                            View Report →
+                        </a>
+
+                    </div>
+
+
+                    <div class="fast-item">
+
+                        <div class="rank">
+                            1
+                        </div>
+
+                        <div class="fast-info">
+
+                            <strong>
+                                Paracetamol
+                            </strong>
+
+                            <div class="bar">
+
+                                <span
+                                    class="bar-blue"
+                                    style="width:90%;">
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="sold">
+                            450 sold
+                        </div>
+
+                    </div>
+
+
+                    <div class="fast-item">
+
+                        <div class="rank">
+                            2
+                        </div>
+
+                        <div class="fast-info">
+
+                            <strong>
+                                Cetirizine
+                            </strong>
+
+                            <div class="bar">
+
+                                <span
+                                    class="bar-green"
+                                    style="width:70%;">
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="sold">
+                            320 sold
+                        </div>
+
+                    </div>
+
+
+                    <div class="fast-item">
+
+                        <div class="rank">
+                            3
+                        </div>
+
+                        <div class="fast-info">
+
+                            <strong>
+                                ORS
+                            </strong>
+
+                            <div class="bar">
+
+                                <span
+                                    class="bar-orange"
+                                    style="width:55%;">
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="sold">
+                            275 sold
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ================= RIGHT COLUMN ================= -->
+
+            <div>
+
+
+                <!-- LOW STOCK -->
+
+                <div class="box">
+
+                    <div class="box-header">
+
+                        <h3>
+                            ⚠️ Low Stock Alert
+                        </h3>
+
+                        <a href="#" class="view">
+                            View All
+                        </a>
+
+                    </div>
+
+
+                    <div class="alert">
+
+                        <div class="alert-icon">
+                            💊
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Vitamin C
+                            </strong>
+
+                            <small>
+                                Only 10 units left
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="alert">
+
+                        <div class="alert-icon">
+                            💊
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Amoxicillin
+                            </strong>
+
+                            <small>
+                                Only 8 units left
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="alert">
+
+                        <div class="alert-icon">
+                            🧴
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Cough Syrup
+                            </strong>
+
+                            <small>
+                                Only 6 units left
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- EXPIRY SUMMARY -->
+
+                <div class="box">
+
+                    <div class="box-header">
+
+                        <h3>
+                            ⏳ Expiry Summary
+                        </h3>
+
+                    </div>
+
+
+                    <div class="alert">
+
+                        <div class="alert-icon">
+                            🔴
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                3 Medicines
+                            </strong>
+
+                            <small>
+                                Expiring within 30 days
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="alert">
+
+                        <div class="alert-icon">
+                            🟡
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                7 Medicines
+                            </strong>
+
+                            <small>
+                                Expiring within 60 days
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- RECENT BILLS -->
+
+                <div class="box">
+
+                    <div class="box-header">
+
+                        <h3>
+                            🧾 Recent Bills
+                        </h3>
+
+                        <a href="#" class="view">
+                            View All
+                        </a>
+
+                    </div>
+
+
+                    <div class="bill">
+
+                        <div class="bill-info">
+
+                            <strong>
+                                Bill #B001
+                            </strong>
+
+                            <small>
+                                Customer 1
+                            </small>
+
+                        </div>
+
+                        <div class="amount">
+                            ₹250
+                        </div>
+
+                    </div>
+
+
+                    <div class="bill">
+
+                        <div class="bill-info">
+
+                            <strong>
+                                Bill #B002
+                            </strong>
+
+                            <small>
+                                Customer 2
+                            </small>
+
+                        </div>
+
+                        <div class="amount">
+                            ₹480
+                        </div>
+
+                    </div>
+
+
+                    <div class="bill">
+
+                        <div class="bill-info">
+
+                            <strong>
+                                Bill #B003
+                            </strong>
+
+                            <small>
+                                Customer 3
+                            </small>
+
+                        </div>
+
+                        <div class="amount">
+                            ₹175
+                        </div>
+
+                    </div>
+
+
+                    <div class="bill">
+
+                        <div class="bill-info">
+
+                            <strong>
+                                Bill #B004
+                            </strong>
+
+                            <small>
+                                Customer 4
+                            </small>
+
+                        </div>
+
+                        <div class="amount">
+                            ₹620
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

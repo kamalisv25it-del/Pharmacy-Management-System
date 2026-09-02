@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pharmacy Management System</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">💊</div>
+            <div>
+                <h2>PharmaCare</h2>
+                <p>Management System</p>
+            </div>
+        </div>
+
+        <nav class="navigation">
+
+            <button class="nav-item active" onclick="showSection('dashboard')">
+                <span>📊</span>
+                Dashboard
+            </button>
+
+            <button class="nav-item" onclick="showSection('pharmacy')">
+                <span>🏥</span>
+                Pharmacy Records
+            </button>
+
+            <button class="nav-item" onclick="showSection('medicines')">
+                <span>💊</span>
+                Medicines
+            </button>
+
+            <button class="nav-item" onclick="showSection('customers')">
+                <span>👥</span>
+                Customers
+            </button>
+
+            <button class="nav-item" onclick="showSection('purchases')">
+                <span>🛒</span>
+                Purchase Management
+            </button>
+
+            <button class="nav-item" onclick="showSection('transactions')">
+                <span>💰</span>
+                Sales & Billing
+            </button>
+
+            <button class="nav-item" onclick="showSection('records')">
+                <span>🔎</span>
+                Search & Records
+            </button>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <p>Authorized User</p>
+            <strong>Pharmacy Staff</strong>
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- HEADER -->
+        <header class="top-header">
+
+            <div class="header-left">
+
+                <button class="menu-button" onclick="toggleSidebar()">
+                    ☰
+                </button>
+
+                <div>
+                    <p class="welcome">Good afternoon 👋</p>
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+
+            </div>
+
+            <div class="profile">
+                <div class="profile-icon">PS</div>
+
+                <div>
+                    <strong>Pharmacy Staff</strong>
+                    <span>Authorized User</span>
+                </div>
+            </div>
+
+        </header>
+
+
+        <!-- DASHBOARD -->
+        <section id="dashboard" class="page-section">
+
+            <div class="hero">
+
+                <div>
+                    <span class="hero-label">PHARMACY MANAGEMENT</span>
+
+                    <h2>
+                        Manage your pharmacy
+                        records with ease.
+                    </h2>
+
+                    <p>
+                        Manage medicines, customers, purchases,
+                        stock, expiry and billing information
+                        from one place.
+                    </p>
+                </div>
+
+                <div class="hero-icon">
+                    💊
+                </div>
+
+            </div>
+
+
+            <!-- SUMMARY CARDS -->
+            <div class="summary-grid">
+
+                <div class="summary-card">
+                    <div class="card-icon blue">💊</div>
+                    <div>
+                        <p>Total Medicines</p>
+                        <h2>128</h2>
+                        <span>Available medicines</span>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon purple">👥</div>
+                    <div>
+                        <p>Total Customers</p>
+                        <h2>86</h2>
+                        <span>Registered customers</span>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon orange">⚠️</div>
+                    <div>
+                        <p>Low Stock</p>
+                        <h2>12</h2>
+                        <span>Need restocking</span>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon red">⏰</div>
+                    <div>
+                        <p>Expiring Soon</p>
+                        <h2>8</h2>
+                        <span>Check expiry dates</span>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- CHARTS -->
+            <div class="chart-grid">
+
+                <div class="content-card">
+
+                    <div class="card-heading">
+                        <div>
+                            <h3>Monthly Sales</h3>
+                            <p>Sales performance overview</p>
+                        </div>
+
+                        <span class="chart-badge">2026</span>
+                    </div>
+
+                    <div class="chart">
+                        <div class="bar-container">
+
+                            <div class="bar-item">
+                                <span>Jan</span>
+                                <div class="bar" style="height: 55%;"></div>
+                            </div>
+
+                            <div class="bar-item">
+                                <span>Feb</span>
+                                <div class="bar" style="height: 70%;"></div>
+                            </div>
+
+                            <div class="bar-item">
+                                <span>Mar</span>
+                                <div class="bar" style="height: 62%;"></div>
+                            </div>
+
+                            <div class="bar-item">
+                                <span>Apr</span>
+                                <div class="bar" style="height: 80%;"></div>
+                            </div>
+
+                            <div class="bar-item">
+                                <span>May</span>
+                                <div class="bar" style="height: 72%;"></div>
+                            </div>
+
+                            <div class="bar-item">
+                                <span>Jun</span>
+                                <div class="bar" style="height: 90%;"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="content-card">
+
+                    <div class="card-heading">
+                        <div>
+                            <h3>Medicine Stock</h3>
+                            <p>Current stock status</p>
+                        </div>
+                    </div>
+
+                    <div class="stock-chart">
+
+                        <div class="stock-circle">
+                            <div>
+                                <strong>128</strong>
+                                <span>Medicines</span>
+                            </div>
+                        </div>
+
+                        <div class="stock-info">
+                            <p>
+                                <span class="dot available"></span>
+                                Available
+                                <strong>108</strong>
+                            </p>
+
+                            <p>
+                                <span class="dot low"></span>
+                                Low Stock
+                                <strong>12</strong>
+                            </p>
+
+                            <p>
+                                <span class="dot expired"></span>
+                                Expiring
+                                <strong>8</strong>
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CUSTOMER DETAILS -->
+            <div class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+                        <h3>Customer Details</h3>
+                        <p>Customer information and purchase history</p>
+                    </div>
+
+                    <button class="primary-button"
+                            onclick="showSection('customers')">
+                        + View Customers
+                    </button>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Customer ID</th>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Purchase History</th>
+                                <th>Total Purchase</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>CUS001</td>
+                                <td>
+                                    <strong>Arun Kumar</strong>
+                                </td>
+                                <td>Madurai</td>
+                                <td>12 Purchases</td>
+                                <td>₹8,450</td>
+                                <td>
+                                    <span class="status active-status">
+                                        Active
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>CUS002</td>
+                                <td>
+                                    <strong>Priya Devi</strong>
+                                </td>
+                                <td>Chennai</td>
+                                <td>8 Purchases</td>
+                                <td>₹5,720</td>
+                                <td>
+                                    <span class="status active-status">
+                                        Active
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>CUS003</td>
+                                <td>
+                                    <strong>Rahul S</strong>
+                                </td>
+                                <td>Coimbatore</td>
+                                <td>5 Purchases</td>
+                                <td>₹3,250</td>
+                                <td>
+                                    <span class="status active-status">
+                                        Active
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>CUS004</td>
+                                <td>
+                                    <strong>Meena R</strong>
+                                </td>
+                                <td>Trichy</td>
+                                <td>3 Purchases</td>
+                                <td>₹1,890</td>
+                                <td>
+                                    <span class="status inactive-status">
+                                        Inactive
+                                    </span>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- STOCK + EXPIRY -->
+            <div class="two-column">
+
+                <div class="content-card">
+
+                    <div class="card-heading">
+                        <div>
+                            <h3>Stock Details</h3>
+                            <p>Medicine stock availability</p>
+                        </div>
+                    </div>
+
+                    <div class="medicine-list">
+
+                        <div class="medicine-row">
+                            <div class="medicine-icon">💊</div>
+
+                            <div class="medicine-info">
+                                <strong>Paracetamol</strong>
+                                <span>Tablet • 500mg</span>
+                            </div>
+
+                            <div class="stock-number">
+                                120
+                                <small>units</small>
+                            </div>
+                        </div>
+
+                        <div class="medicine-row">
+                            <div class="medicine-icon">💊</div>
+
+                            <div class="medicine-info">
+                                <strong>Amoxicillin</strong>
+                                <span>Capsule • 250mg</span>
+                            </div>
+
+                            <div class="stock-number">
+                                18
+                                <small>units</small>
+                            </div>
+                        </div>
+
+                        <div class="medicine-row">
+                            <div class="medicine-icon">💊</div>
+
+                            <div class="medicine-info">
+                                <strong>Cetirizine</strong>
+                                <span>Tablet • 10mg</span>
+                            </div>
+
+                            <div class="stock-number low-stock-number">
+                                6
+                                <small>units</small>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="content-card">
+
+                    <div class="card-heading">
+                        <div>
+                            <h3>Expiry Details</h3>
+                            <p>Medicines expiring soon</p>
+                        </div>
+                    </div>
+
+                    <div class="expiry-list">
+
+                        <div class="expiry-item">
+                            <div>
+                                <strong>Amoxicillin</strong>
+                                <span>Batch: AMX1024</span>
+                            </div>
+
+                            <span class="expiry-date">
+                                15 Oct 2026
+                            </span>
+                        </div>
+
+                        <div class="expiry-item">
+                            <div>
+                                <strong>Cetirizine</strong>
+                                <span>Batch: CTZ2054</span>
+                            </div>
+
+                            <span class="expiry-date">
+                                22 Oct 2026
+                            </span>
+                        </div>
+
+                        <div class="expiry-item">
+                            <div>
+                                <strong>Azithromycin</strong>
+                                <span>Batch: AZT3055</span>
+                            </div>
+
+                            <span class="expiry-date">
+                                05 Nov 2026
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- SALES SUMMARY -->
+            <div class="sales-card">
+
+                <div>
+                    <p>Total Sales</p>
+                    <h2>₹45,850</h2>
+                    <span>This month</span>
+                </div>
+
+                <div>
+                    <p>Total Purchases</p>
+                    <h2>₹32,400</h2>
+                    <span>This month</span>
+                </div>
+
+                <div>
+                    <p>Total Transactions</p>
+                    <h2>156</h2>
+                    <span>Completed transactions</span>
+                </div>
+
+                <div>
+                    <p>Average Purchase</p>
+                    <h2>₹2,190</h2>
+                    <span>Per customer</span>
+                </div>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+            <div class="content-card">
+
+                <div class="card-heading">
+                    <div>
+                        <h3>Quick Actions</h3>
+                        <p>Frequently used options</p>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+
+                    <button onclick="showSection('medicines')">
+                        <span>💊</span>
+                        Add Medicine
+                    </button>
+
+                    <button onclick="showSection('customers')">
+                        <span>👤</span>
+                        Add Customer
+                    </button>
+
+                    <button onclick="showSection('purchases')">
+                        <span>🛒</span>
+                        Manage Purchase
+                    </button>
+
+                    <button onclick="showSection('transactions')">
+                        <span>💰</span>
+                        Sales & Billing
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PHARMACY RECORDS -->
+        <section id="pharmacy" class="page-section hidden">
+
+            <div class="section-header">
+                <div>
+                    <h2>Pharmacy Records</h2>
+                    <p>Manage pharmacy information and records.</p>
+                </div>
+            </div>
+
+            <div class="form-grid">
+
+                <div class="form-card">
+                    <h3>Pharmacy Information</h3>
+
+                    <label>Pharmacy Name</label>
+                    <input type="text" value="PharmaCare">
+
+                    <label>Address</label>
+                    <input type="text" value="Madurai, Tamil Nadu">
+
+                    <label>Phone Number</label>
+                    <input type="text" value="+91 9876543210">
+
+                    <label>Email</label>
+                    <input type="email" value="pharmacare@example.com">
+
+                    <button class="primary-button">
+                        Save Details
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MEDICINES -->
+        <section id="medicines" class="page-section hidden">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Medicine Management</h2>
+                    <p>Manage medicine details, stock and expiry.</p>
+                </div>
+
+                <button class="primary-button">
+                    + Add Medicine
+                </button>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <div class="search-box">
+                    🔎
+                    <input type="text"
+                           placeholder="Search medicine..."
+                           onkeyup="searchTable(this, 'medicineTable')">
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table id="medicineTable">
+
+                        <thead>
+                            <tr>
+                                <th>Medicine ID</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>MED001</td>
+                                <td>Paracetamol</td>
+                                <td>Tablet</td>
+                                <td>120</td>
+                                <td>₹25</td>
+                                <td>Dec 2027</td>
+                                <td>
+                                    <span class="status active-status">
+                                        Available
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>MED002</td>
+                                <td>Amoxicillin</td>
+                                <td>Capsule</td>
+                                <td>18</td>
+                                <td>₹85</td>
+                                <td>Oct 2026</td>
+                                <td>
+                                    <span class="status warning-status">
+                                        Low Stock
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>MED003</td>
+                                <td>Cetirizine</td>
+                                <td>Tablet</td>
+                                <td>6</td>
+                                <td>₹30</td>
+                                <td>Oct 2026</td>
+                                <td>
+                                    <span class="status warning-status">
+                                        Low Stock
+                                    </span>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CUSTOMERS -->
+        <section id="customers" class="page-section hidden">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Customer Management</h2>
+                    <p>Manage customer information and purchase history.</p>
+                </div>
+
+                <button class="primary-button">
+                    + Add Customer
+                </button>
+
+            </div>
+
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+                    <div class="card-icon purple">👥</div>
+                    <div>
+                        <p>Total Customers</p>
+                        <h2>86</h2>
+                        <span>Registered</span>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon blue">🛒</div>
+                    <div>
+                        <p>Total Purchases</p>
+                        <h2>324</h2>
+                        <span>Customer purchases</span>
+                    </div>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-icon green">₹</div>
+                    <div>
+                        <p>Total Customer Purchase</p>
+                        <h2>₹2.8L</h2>
+                        <span>Overall value</span>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <div class="search-box">
+                    🔎
+                    <input type="text"
+                           placeholder="Search customer..."
+                           onkeyup="searchTable(this, 'customerTable')">
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table id="customerTable">
+
+                        <thead>
+                            <tr>
+                                <th>Customer ID</th>
+                                <th>Name</th>
+                                <th>Address</th>
+                                <th>Purchase History</th>
+                                <th>Total Purchase</th>
+                                <th>Last Purchase</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>CUS001</td>
+                                <td><strong>Arun Kumar</strong></td>
+                                <td>Madurai</td>
+                                <td>12 Purchases</td>
+                                <td>₹8,450</td>
+                                <td>28 Aug 2026</td>
+                                <td>
+                                    <button class="small-button">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>CUS002</td>
+                                <td><strong>Priya Devi</strong></td>
+                                <td>Chennai</td>
+                                <td>8 Purchases</td>
+                                <td>₹5,720</td>
+                                <td>25 Aug 2026</td>
+                                <td>
+                                    <button class="small-button">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td>CUS003</td>
+                                <td><strong>Rahul S</strong></td>
+                                <td>Coimbatore</td>
+                                <td>5 Purchases</td>
+                                <td>₹3,250</td>
+                                <td>21 Aug 2026</td>
+                                <td>
+                                    <button class="small-button">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PURCHASE MANAGEMENT -->
+        <section id="purchases" class="page-section hidden">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Purchase Management</h2>
+                    <p>Manage customer purchases and purchase history.</p>
+                </div>
+
+                <button class="primary-button">
+                    + New Purchase
+                </button>
+
+            </div>
+
+
+            <div class="purchase-summary">
+
+                <div>
+                    <span>Today's Purchases</span>
+                    <strong>18</strong>
+                </div>
+
+                <div>
+                    <span>Purchase Value</span>
+                    <strong>₹7,850</strong>
+                </div>
+
+                <div>
+                    <span>Customers Served</span>
+                    <strong>15</strong>
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <div class="card-heading">
+
+                    <div>
+                        <h3>Purchase History</h3>
+                        <p>Customer purchase records</p>
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table id="purchaseTable">
+
+                        <thead>
+                            <tr>
+                                <th>Purchase ID</th>
+                                <th>Customer ID</th>
+                                <th>Customer Name</th>
+                                <th>Medicine</th>
+                                <th>Quantity</th>
+                                <th>Amount</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>PUR001</td>
+                                <td>CUS001</td>
+                                <td>Arun Kumar</td>
+                                <td>Paracetamol</td>
+                                <td>5</td>
+                                <td>₹125</td>
+                                <td>28 Aug 2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>PUR002</td>
+                                <td>CUS002</td>
+                                <td>Priya Devi</td>
+                                <td>Amoxicillin</td>
+                                <td>2</td>
+                                <td>₹170</td>
+                                <td>27 Aug 2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>PUR003</td>
+                                <td>CUS003</td>
+                                <td>Rahul S</td>
+                                <td>Cetirizine</td>
+                                <td>3</td>
+                                <td>₹90</td>
+                                <td>26 Aug 2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>PUR004</td>
+                                <td>CUS001</td>
+                                <td>Arun Kumar</td>
+                                <td>Azithromycin</td>
+                                <td>2</td>
+                                <td>₹240</td>
+                                <td>25 Aug 2026</td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- TRANSACTIONS -->
+        <section id="transactions" class="page-section hidden">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Sales & Billing</h2>
+                    <p>Manage sales and billing transactions.</p>
+                </div>
+
+                <button class="primary-button">
+                    + Add Transaction
+                </button>
+
+            </div>
+
+
+            <div class="sales-card">
+
+                <div>
+                    <p>Today's Sales</p>
+                    <h2>₹7,850</h2>
+                </div>
+
+                <div>
+                    <p>Monthly Sales</p>
+                    <h2>₹45,850</h2>
+                </div>
+
+                <div>
+                    <p>Transactions</p>
+                    <h2>156</h2>
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Bill ID</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+                                <td>BILL001</td>
+                                <td>Arun Kumar</td>
+                                <td>3</td>
+                                <td>₹450</td>
+                                <td>
+                                    <span class="status active-status">
+                                        Paid
+                                    </span>
+                                </td>
+                                <td>02 Sep 2026</td>
+                            </tr>
+
+                            <tr>
+                                <td>BILL002</td>
+                                <td>Priya Devi</td>
+                                <td>2</td>
+                                <td>₹320</td>
+                                <td>
+                                    <span class="status active-status">
+                                        Paid
+                                    </span>
+                                </td>
+                                <td>02 Sep 2026</td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- SEARCH -->
+        <section id="records" class="page-section hidden">
+
+            <div class="section-header">
+
+                <div>
+                    <h2>Search & Records</h2>
+                    <p>Search medicines, customers and transactions.</p>
+                </div>
+
+            </div>
+
+
+            <div class="content-card">
+
+                <div class="large-search">
+                    🔎
+                    <input type="text"
+                           id="globalSearch"
+                           placeholder="Search records..."
+                           onkeyup="globalSearch()">
+                </div>
+
+                <div id="searchMessage">
+                    Start typing to search records.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer>
+            <p>© 2026 PharmaCare Management System</p>
+            <span>Pharmacy Staff Portal</span>
+        </footer>
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>

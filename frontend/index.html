@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Pharmacy Management System</title>
+    <title>PharmaCare - Pharmacy Management System</title>
+    <meta name="description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing with Supabase PostgreSQL.">
+    <meta property="og:title" content="PharmaCare - Pharmacy Management System">
+    <meta property="og:description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing with Supabase PostgreSQL.">
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -62,8 +65,8 @@
         </nav>
 
         <div class="sidebar-bottom">
-            <p>Authorized User</p>
-            <strong>Pharmacy Staff</strong>
+            <p>Database: <strong id="sidebarDbMode">PostgreSQL</strong></p>
+            <strong>Pharmacy Staff Portal</strong>
         </div>
 
     </aside>
@@ -88,12 +91,18 @@
 
             </div>
 
-            <div class="profile">
-                <div class="profile-icon">PS</div>
+            <div class="profile" style="display: flex; align-items: center; gap: 14px;">
+                <div id="dbStatusBadge" class="db-pill waiting" title="Supabase PostgreSQL Connection">
+                    <span class="db-dot"></span>
+                    <span id="dbStatusText">Checking DB...</span>
+                </div>
 
-                <div>
-                    <strong>Pharmacy Staff</strong>
-                    <span>Authorized User</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="profile-icon">PS</div>
+                    <div>
+                        <strong>Pharmacy Staff</strong>
+                        <span>Authorized User</span>
+                    </div>
                 </div>
             </div>
 
@@ -106,7 +115,7 @@
             <div class="hero">
 
                 <div>
-                    <span class="hero-label">PHARMACY MANAGEMENT</span>
+                    <span class="hero-label">SUPABASE POSTGRESQL INTEGRATED</span>
 
                     <h2>
                         Manage your pharmacy
@@ -116,7 +125,7 @@
                     <p>
                         Manage medicines, customers, purchases,
                         stock, expiry and billing information
-                        from one place.
+                        with real-time database persistence.
                     </p>
                 </div>
 
@@ -134,7 +143,7 @@
                     <div class="card-icon blue">💊</div>
                     <div>
                         <p>Total Medicines</p>
-                        <h2>128</h2>
+                        <h2 id="dashTotalMedicines">--</h2>
                         <span>Available medicines</span>
                     </div>
                 </div>
@@ -143,7 +152,7 @@
                     <div class="card-icon purple">👥</div>
                     <div>
                         <p>Total Customers</p>
-                        <h2>86</h2>
+                        <h2 id="dashTotalCustomers">--</h2>
                         <span>Registered customers</span>
                     </div>
                 </div>
@@ -152,7 +161,7 @@
                     <div class="card-icon orange">⚠️</div>
                     <div>
                         <p>Low Stock</p>
-                        <h2>12</h2>
+                        <h2 id="dashLowStock">--</h2>
                         <span>Need restocking</span>
                     </div>
                 </div>
@@ -161,7 +170,7 @@
                     <div class="card-icon red">⏰</div>
                     <div>
                         <p>Expiring Soon</p>
-                        <h2>8</h2>
+                        <h2 id="dashExpiringSoon">--</h2>
                         <span>Check expiry dates</span>
                     </div>
                 </div>
@@ -184,38 +193,8 @@
                     </div>
 
                     <div class="chart">
-                        <div class="bar-container">
-
-                            <div class="bar-item">
-                                <span>Jan</span>
-                                <div class="bar" style="height: 55%;"></div>
-                            </div>
-
-                            <div class="bar-item">
-                                <span>Feb</span>
-                                <div class="bar" style="height: 70%;"></div>
-                            </div>
-
-                            <div class="bar-item">
-                                <span>Mar</span>
-                                <div class="bar" style="height: 62%;"></div>
-                            </div>
-
-                            <div class="bar-item">
-                                <span>Apr</span>
-                                <div class="bar" style="height: 80%;"></div>
-                            </div>
-
-                            <div class="bar-item">
-                                <span>May</span>
-                                <div class="bar" style="height: 72%;"></div>
-                            </div>
-
-                            <div class="bar-item">
-                                <span>Jun</span>
-                                <div class="bar" style="height: 90%;"></div>
-                            </div>
-
+                        <div class="bar-container" id="dashMonthlySales">
+                            <!-- Populated dynamically -->
                         </div>
                     </div>
 
@@ -235,7 +214,7 @@
 
                         <div class="stock-circle">
                             <div>
-                                <strong>128</strong>
+                                <strong id="stockChartTotal">--</strong>
                                 <span>Medicines</span>
                             </div>
                         </div>
@@ -244,19 +223,19 @@
                             <p>
                                 <span class="dot available"></span>
                                 Available
-                                <strong>108</strong>
+                                <strong id="stockChartAvailable">--</strong>
                             </p>
 
                             <p>
                                 <span class="dot low"></span>
                                 Low Stock
-                                <strong>12</strong>
+                                <strong id="stockChartLow">--</strong>
                             </p>
 
                             <p>
                                 <span class="dot expired"></span>
                                 Expiring
-                                <strong>8</strong>
+                                <strong id="stockChartExpiring">--</strong>
                             </p>
                         </div>
 
@@ -274,12 +253,11 @@
 
                     <div>
                         <h3>Customer Details</h3>
-                        <p>Customer information and purchase history</p>
+                        <p>Recent customer activity & transactions</p>
                     </div>
 
-                    <button class="primary-button"
-                            onclick="showSection('customers')">
-                        + View Customers
+                    <button class="primary-button" onclick="showSection('customers')">
+                        + View All Customers
                     </button>
 
                 </div>
@@ -300,68 +278,8 @@
                             </tr>
                         </thead>
 
-                        <tbody>
-
-                            <tr>
-                                <td>CUS001</td>
-                                <td>
-                                    <strong>Arun Kumar</strong>
-                                </td>
-                                <td>Madurai</td>
-                                <td>12 Purchases</td>
-                                <td>₹8,450</td>
-                                <td>
-                                    <span class="status active-status">
-                                        Active
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>CUS002</td>
-                                <td>
-                                    <strong>Priya Devi</strong>
-                                </td>
-                                <td>Chennai</td>
-                                <td>8 Purchases</td>
-                                <td>₹5,720</td>
-                                <td>
-                                    <span class="status active-status">
-                                        Active
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>CUS003</td>
-                                <td>
-                                    <strong>Rahul S</strong>
-                                </td>
-                                <td>Coimbatore</td>
-                                <td>5 Purchases</td>
-                                <td>₹3,250</td>
-                                <td>
-                                    <span class="status active-status">
-                                        Active
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>CUS004</td>
-                                <td>
-                                    <strong>Meena R</strong>
-                                </td>
-                                <td>Trichy</td>
-                                <td>3 Purchases</td>
-                                <td>₹1,890</td>
-                                <td>
-                                    <span class="status inactive-status">
-                                        Inactive
-                                    </span>
-                                </td>
-                            </tr>
-
+                        <tbody id="dashCustomerTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: #64748b;">Loading records...</td></tr>
                         </tbody>
 
                     </table>
@@ -379,54 +297,12 @@
                     <div class="card-heading">
                         <div>
                             <h3>Stock Details</h3>
-                            <p>Medicine stock availability</p>
+                            <p>Medicine inventory monitor</p>
                         </div>
                     </div>
 
-                    <div class="medicine-list">
-
-                        <div class="medicine-row">
-                            <div class="medicine-icon">💊</div>
-
-                            <div class="medicine-info">
-                                <strong>Paracetamol</strong>
-                                <span>Tablet • 500mg</span>
-                            </div>
-
-                            <div class="stock-number">
-                                120
-                                <small>units</small>
-                            </div>
-                        </div>
-
-                        <div class="medicine-row">
-                            <div class="medicine-icon">💊</div>
-
-                            <div class="medicine-info">
-                                <strong>Amoxicillin</strong>
-                                <span>Capsule • 250mg</span>
-                            </div>
-
-                            <div class="stock-number">
-                                18
-                                <small>units</small>
-                            </div>
-                        </div>
-
-                        <div class="medicine-row">
-                            <div class="medicine-icon">💊</div>
-
-                            <div class="medicine-info">
-                                <strong>Cetirizine</strong>
-                                <span>Tablet • 10mg</span>
-                            </div>
-
-                            <div class="stock-number low-stock-number">
-                                6
-                                <small>units</small>
-                            </div>
-                        </div>
-
+                    <div class="medicine-list" id="dashMedicineStockList">
+                        <!-- Populated dynamically -->
                     </div>
 
                 </div>
@@ -441,41 +317,8 @@
                         </div>
                     </div>
 
-                    <div class="expiry-list">
-
-                        <div class="expiry-item">
-                            <div>
-                                <strong>Amoxicillin</strong>
-                                <span>Batch: AMX1024</span>
-                            </div>
-
-                            <span class="expiry-date">
-                                15 Oct 2026
-                            </span>
-                        </div>
-
-                        <div class="expiry-item">
-                            <div>
-                                <strong>Cetirizine</strong>
-                                <span>Batch: CTZ2054</span>
-                            </div>
-
-                            <span class="expiry-date">
-                                22 Oct 2026
-                            </span>
-                        </div>
-
-                        <div class="expiry-item">
-                            <div>
-                                <strong>Azithromycin</strong>
-                                <span>Batch: AZT3055</span>
-                            </div>
-
-                            <span class="expiry-date">
-                                05 Nov 2026
-                            </span>
-                        </div>
-
+                    <div class="expiry-list" id="dashExpiryList">
+                        <!-- Populated dynamically -->
                     </div>
 
                 </div>
@@ -488,25 +331,25 @@
 
                 <div>
                     <p>Total Sales</p>
-                    <h2>₹45,850</h2>
+                    <h2 id="dashTotalSales">₹0</h2>
                     <span>This month</span>
                 </div>
 
                 <div>
                     <p>Total Purchases</p>
-                    <h2>₹32,400</h2>
+                    <h2 id="dashTotalPurchases">₹0</h2>
                     <span>This month</span>
                 </div>
 
                 <div>
                     <p>Total Transactions</p>
-                    <h2>156</h2>
+                    <h2 id="dashTotalTransactions">0</h2>
                     <span>Completed transactions</span>
                 </div>
 
                 <div>
                     <p>Average Purchase</p>
-                    <h2>₹2,190</h2>
+                    <h2 id="dashAvgPurchase">₹0</h2>
                     <span>Per customer</span>
                 </div>
 
@@ -519,28 +362,28 @@
                 <div class="card-heading">
                     <div>
                         <h3>Quick Actions</h3>
-                        <p>Frequently used options</p>
+                        <p>Frequently used operational tasks</p>
                     </div>
                 </div>
 
                 <div class="quick-actions">
 
-                    <button onclick="showSection('medicines')">
+                    <button onclick="openModal('medicineModal')">
                         <span>💊</span>
                         Add Medicine
                     </button>
 
-                    <button onclick="showSection('customers')">
+                    <button onclick="openModal('customerModal')">
                         <span>👤</span>
                         Add Customer
                     </button>
 
-                    <button onclick="showSection('purchases')">
+                    <button onclick="openModal('purchaseModal')">
                         <span>🛒</span>
                         Manage Purchase
                     </button>
 
-                    <button onclick="showSection('transactions')">
+                    <button onclick="openModal('transactionModal')">
                         <span>💰</span>
                         Sales & Billing
                     </button>
@@ -558,7 +401,7 @@
             <div class="section-header">
                 <div>
                     <h2>Pharmacy Records</h2>
-                    <p>Manage pharmacy information and records.</p>
+                    <p>Manage pharmacy profile and records persisted in Supabase PostgreSQL.</p>
                 </div>
             </div>
 
@@ -567,19 +410,19 @@
                 <div class="form-card">
                     <h3>Pharmacy Information</h3>
 
-                    <label>Pharmacy Name</label>
-                    <input type="text" value="PharmaCare">
+                    <label for="pharmacyNameInput">Pharmacy Name</label>
+                    <input type="text" id="pharmacyNameInput" value="PharmaCare">
 
-                    <label>Address</label>
-                    <input type="text" value="Madurai, Tamil Nadu">
+                    <label for="pharmacyAddressInput">Address</label>
+                    <input type="text" id="pharmacyAddressInput" value="Madurai, Tamil Nadu">
 
-                    <label>Phone Number</label>
-                    <input type="text" value="+91 9876543210">
+                    <label for="pharmacyPhoneInput">Phone Number</label>
+                    <input type="text" id="pharmacyPhoneInput" value="+91 9876543210">
 
-                    <label>Email</label>
-                    <input type="email" value="pharmacare@example.com">
+                    <label for="pharmacyEmailInput">Email</label>
+                    <input type="email" id="pharmacyEmailInput" value="pharmacare@example.com">
 
-                    <button class="primary-button">
+                    <button class="primary-button" id="btnSavePharmacy" onclick="savePharmacyDetails()">
                         Save Details
                     </button>
                 </div>
@@ -596,10 +439,10 @@
 
                 <div>
                     <h2>Medicine Management</h2>
-                    <p>Manage medicine details, stock and expiry.</p>
+                    <p>Manage medicine inventory, stock levels, and expiry tracking.</p>
                 </div>
 
-                <button class="primary-button">
+                <button class="primary-button" onclick="openModal('medicineModal')">
                     + Add Medicine
                 </button>
 
@@ -611,8 +454,9 @@
                 <div class="search-box">
                     🔎
                     <input type="text"
-                           placeholder="Search medicine..."
-                           onkeyup="searchTable(this, 'medicineTable')">
+                           id="medicineSearchInput"
+                           placeholder="Search medicine by name, category, or batch..."
+                           onkeyup="filterMedicinesTable(this.value)">
                 </div>
 
                 <div class="table-wrapper">
@@ -628,53 +472,12 @@
                                 <th>Price</th>
                                 <th>Expiry Date</th>
                                 <th>Status</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
 
-                        <tbody>
-
-                            <tr>
-                                <td>MED001</td>
-                                <td>Paracetamol</td>
-                                <td>Tablet</td>
-                                <td>120</td>
-                                <td>₹25</td>
-                                <td>Dec 2027</td>
-                                <td>
-                                    <span class="status active-status">
-                                        Available
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>MED002</td>
-                                <td>Amoxicillin</td>
-                                <td>Capsule</td>
-                                <td>18</td>
-                                <td>₹85</td>
-                                <td>Oct 2026</td>
-                                <td>
-                                    <span class="status warning-status">
-                                        Low Stock
-                                    </span>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>MED003</td>
-                                <td>Cetirizine</td>
-                                <td>Tablet</td>
-                                <td>6</td>
-                                <td>₹30</td>
-                                <td>Oct 2026</td>
-                                <td>
-                                    <span class="status warning-status">
-                                        Low Stock
-                                    </span>
-                                </td>
-                            </tr>
-
+                        <tbody id="medicineTableBody">
+                            <tr><td colspan="8" style="text-align: center; color: #64748b;">Loading medicines...</td></tr>
                         </tbody>
 
                     </table>
@@ -693,10 +496,10 @@
 
                 <div>
                     <h2>Customer Management</h2>
-                    <p>Manage customer information and purchase history.</p>
+                    <p>Manage customer profiles and lifetime purchase tracking.</p>
                 </div>
 
-                <button class="primary-button">
+                <button class="primary-button" onclick="openModal('customerModal')">
                     + Add Customer
                 </button>
 
@@ -709,7 +512,7 @@
                     <div class="card-icon purple">👥</div>
                     <div>
                         <p>Total Customers</p>
-                        <h2>86</h2>
+                        <h2 id="custSummaryCount">0</h2>
                         <span>Registered</span>
                     </div>
                 </div>
@@ -718,7 +521,7 @@
                     <div class="card-icon blue">🛒</div>
                     <div>
                         <p>Total Purchases</p>
-                        <h2>324</h2>
+                        <h2 id="custSummaryPurchases">0</h2>
                         <span>Customer purchases</span>
                     </div>
                 </div>
@@ -727,7 +530,7 @@
                     <div class="card-icon green">₹</div>
                     <div>
                         <p>Total Customer Purchase</p>
-                        <h2>₹2.8L</h2>
+                        <h2 id="custSummaryAmount">₹0</h2>
                         <span>Overall value</span>
                     </div>
                 </div>
@@ -740,8 +543,9 @@
                 <div class="search-box">
                     🔎
                     <input type="text"
-                           placeholder="Search customer..."
-                           onkeyup="searchTable(this, 'customerTable')">
+                           id="customerSearchInput"
+                           placeholder="Search customer by name, address, or phone..."
+                           onkeyup="filterCustomersTable(this.value)">
                 </div>
 
 
@@ -761,50 +565,8 @@
                             </tr>
                         </thead>
 
-                        <tbody>
-
-                            <tr>
-                                <td>CUS001</td>
-                                <td><strong>Arun Kumar</strong></td>
-                                <td>Madurai</td>
-                                <td>12 Purchases</td>
-                                <td>₹8,450</td>
-                                <td>28 Aug 2026</td>
-                                <td>
-                                    <button class="small-button">
-                                        View
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>CUS002</td>
-                                <td><strong>Priya Devi</strong></td>
-                                <td>Chennai</td>
-                                <td>8 Purchases</td>
-                                <td>₹5,720</td>
-                                <td>25 Aug 2026</td>
-                                <td>
-                                    <button class="small-button">
-                                        View
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td>CUS003</td>
-                                <td><strong>Rahul S</strong></td>
-                                <td>Coimbatore</td>
-                                <td>5 Purchases</td>
-                                <td>₹3,250</td>
-                                <td>21 Aug 2026</td>
-                                <td>
-                                    <button class="small-button">
-                                        View
-                                    </button>
-                                </td>
-                            </tr>
-
+                        <tbody id="customerTableBody">
+                            <tr><td colspan="7" style="text-align: center; color: #64748b;">Loading customers...</td></tr>
                         </tbody>
 
                     </table>
@@ -823,10 +585,10 @@
 
                 <div>
                     <h2>Purchase Management</h2>
-                    <p>Manage customer purchases and purchase history.</p>
+                    <p>Record customer purchases with real-time stock deduction.</p>
                 </div>
 
-                <button class="primary-button">
+                <button class="primary-button" onclick="openModal('purchaseModal')">
                     + New Purchase
                 </button>
 
@@ -836,18 +598,18 @@
             <div class="purchase-summary">
 
                 <div>
-                    <span>Today's Purchases</span>
-                    <strong>18</strong>
+                    <span>Total Purchases</span>
+                    <strong id="purchaseSummaryCount">0</strong>
                 </div>
 
                 <div>
                     <span>Purchase Value</span>
-                    <strong>₹7,850</strong>
+                    <strong id="purchaseSummaryValue">₹0</strong>
                 </div>
 
                 <div>
-                    <span>Customers Served</span>
-                    <strong>15</strong>
+                    <span>Transactions</span>
+                    <strong id="purchaseSummaryCustomers">0</strong>
                 </div>
 
             </div>
@@ -859,7 +621,7 @@
 
                     <div>
                         <h3>Purchase History</h3>
-                        <p>Customer purchase records</p>
+                        <p>Customer purchases ledger</p>
                     </div>
 
                 </div>
@@ -881,48 +643,8 @@
                             </tr>
                         </thead>
 
-                        <tbody>
-
-                            <tr>
-                                <td>PUR001</td>
-                                <td>CUS001</td>
-                                <td>Arun Kumar</td>
-                                <td>Paracetamol</td>
-                                <td>5</td>
-                                <td>₹125</td>
-                                <td>28 Aug 2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>PUR002</td>
-                                <td>CUS002</td>
-                                <td>Priya Devi</td>
-                                <td>Amoxicillin</td>
-                                <td>2</td>
-                                <td>₹170</td>
-                                <td>27 Aug 2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>PUR003</td>
-                                <td>CUS003</td>
-                                <td>Rahul S</td>
-                                <td>Cetirizine</td>
-                                <td>3</td>
-                                <td>₹90</td>
-                                <td>26 Aug 2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>PUR004</td>
-                                <td>CUS001</td>
-                                <td>Arun Kumar</td>
-                                <td>Azithromycin</td>
-                                <td>2</td>
-                                <td>₹240</td>
-                                <td>25 Aug 2026</td>
-                            </tr>
-
+                        <tbody id="purchaseTableBody">
+                            <tr><td colspan="7" style="text-align: center; color: #64748b;">Loading purchase records...</td></tr>
                         </tbody>
 
                     </table>
@@ -941,10 +663,10 @@
 
                 <div>
                     <h2>Sales & Billing</h2>
-                    <p>Manage sales and billing transactions.</p>
+                    <p>Manage point-of-sale invoices and transactions.</p>
                 </div>
 
-                <button class="primary-button">
+                <button class="primary-button" onclick="openModal('transactionModal')">
                     + Add Transaction
                 </button>
 
@@ -955,17 +677,17 @@
 
                 <div>
                     <p>Today's Sales</p>
-                    <h2>₹7,850</h2>
+                    <h2 id="txSummaryToday">₹0</h2>
                 </div>
 
                 <div>
                     <p>Monthly Sales</p>
-                    <h2>₹45,850</h2>
+                    <h2 id="txSummaryMonth">₹0</h2>
                 </div>
 
                 <div>
                     <p>Transactions</p>
-                    <h2>156</h2>
+                    <h2 id="txSummaryCount">0</h2>
                 </div>
 
             </div>
@@ -975,7 +697,7 @@
 
                 <div class="table-wrapper">
 
-                    <table>
+                    <table id="salesTable">
 
                         <thead>
                             <tr>
@@ -988,34 +710,8 @@
                             </tr>
                         </thead>
 
-                        <tbody>
-
-                            <tr>
-                                <td>BILL001</td>
-                                <td>Arun Kumar</td>
-                                <td>3</td>
-                                <td>₹450</td>
-                                <td>
-                                    <span class="status active-status">
-                                        Paid
-                                    </span>
-                                </td>
-                                <td>02 Sep 2026</td>
-                            </tr>
-
-                            <tr>
-                                <td>BILL002</td>
-                                <td>Priya Devi</td>
-                                <td>2</td>
-                                <td>₹320</td>
-                                <td>
-                                    <span class="status active-status">
-                                        Paid
-                                    </span>
-                                </td>
-                                <td>02 Sep 2026</td>
-                            </tr>
-
+                        <tbody id="salesTableBody">
+                            <tr><td colspan="6" style="text-align: center; color: #64748b;">Loading transactions...</td></tr>
                         </tbody>
 
                     </table>
@@ -1027,14 +723,14 @@
         </section>
 
 
-        <!-- SEARCH -->
+        <!-- SEARCH & RECORDS -->
         <section id="records" class="page-section hidden">
 
             <div class="section-header">
 
                 <div>
                     <h2>Search & Records</h2>
-                    <p>Search medicines, customers and transactions.</p>
+                    <p>Search across medicines, customers, purchases, and sales in Supabase.</p>
                 </div>
 
             </div>
@@ -1046,12 +742,16 @@
                     🔎
                     <input type="text"
                            id="globalSearch"
-                           placeholder="Search records..."
+                           placeholder="Type to search medicines, customers, purchases, bills..."
                            onkeyup="globalSearch()">
                 </div>
 
-                <div id="searchMessage">
-                    Start typing to search records.
+                <div id="searchMessage" style="margin-top: 15px; color: #475569; font-size: 14px; line-height: 1.6;">
+                    Start typing to search records across the PostgreSQL database.
+                </div>
+
+                <div id="searchResultsContainer" style="margin-top: 20px; display: none;">
+                    <!-- Results rendered dynamically -->
                 </div>
 
             </div>
@@ -1061,12 +761,227 @@
 
         <!-- FOOTER -->
         <footer>
-            <p>© 2026 PharmaCare Management System</p>
-            <span>Pharmacy Staff Portal</span>
+            <p>© 2026 PharmaCare Management System • Powered by Supabase PostgreSQL</p>
+            <span>Authorized Pharmacy Staff Portal</span>
         </footer>
 
     </main>
 
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. Add Medicine Modal -->
+    <div id="medicineModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add New Medicine</h3>
+                <button class="modal-close-btn" onclick="closeModal('medicineModal')">&times;</button>
+            </div>
+            <form id="medicineForm" onsubmit="handleMedicineSubmit(event)">
+                <div class="modal-body">
+                    <label for="medName">Medicine Name *</label>
+                    <input type="text" id="medName" required placeholder="e.g. Paracetamol 500mg">
+
+                    <div class="form-row">
+                        <div>
+                            <label for="medCategory">Category *</label>
+                            <select id="medCategory" required>
+                                <option value="Tablet">Tablet</option>
+                                <option value="Capsule">Capsule</option>
+                                <option value="Syrup">Syrup</option>
+                                <option value="Injection">Injection</option>
+                                <option value="Ointment">Ointment</option>
+                                <option value="Drops">Drops</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="medStock">Initial Stock *</label>
+                            <input type="number" id="medStock" min="0" value="50" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="medPrice">Unit Price (₹) *</label>
+                            <input type="number" id="medPrice" min="0" step="0.5" value="25.00" required>
+                        </div>
+                        <div>
+                            <label for="medExpiry">Expiry Date *</label>
+                            <input type="text" id="medExpiry" placeholder="e.g. Dec 2027" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="medBatch">Batch Number</label>
+                            <input type="text" id="medBatch" placeholder="e.g. PCM-2026-04">
+                        </div>
+                        <div>
+                            <label for="medManufacturer">Manufacturer</label>
+                            <input type="text" id="medManufacturer" placeholder="e.g. Sun Pharma">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeModal('medicineModal')">Cancel</button>
+                    <button type="submit" class="primary-button">Save Medicine</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Add Customer Modal -->
+    <div id="customerModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add New Customer</h3>
+                <button class="modal-close-btn" onclick="closeModal('customerModal')">&times;</button>
+            </div>
+            <form id="customerForm" onsubmit="handleCustomerSubmit(event)">
+                <div class="modal-body">
+                    <label for="custName">Customer Full Name *</label>
+                    <input type="text" id="custName" required placeholder="e.g. Ramesh Chandran">
+
+                    <label for="custAddress">City / Address *</label>
+                    <input type="text" id="custAddress" required placeholder="e.g. Madurai, Anna Nagar">
+
+                    <div class="form-row">
+                        <div>
+                            <label for="custPhone">Phone Number</label>
+                            <input type="text" id="custPhone" placeholder="+91 9845012345">
+                        </div>
+                        <div>
+                            <label for="custEmail">Email Address</label>
+                            <input type="email" id="custEmail" placeholder="customer@example.com">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="custStatus">Status</label>
+                        <select id="custStatus">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeModal('customerModal')">Cancel</button>
+                    <button type="submit" class="primary-button">Save Customer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Add Purchase Modal -->
+    <div id="purchaseModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>New Customer Purchase</h3>
+                <button class="modal-close-btn" onclick="closeModal('purchaseModal')">&times;</button>
+            </div>
+            <form id="purchaseForm" onsubmit="handlePurchaseSubmit(event)">
+                <div class="modal-body">
+                    <label for="purchaseCustomerSelect">Select Customer *</label>
+                    <select id="purchaseCustomerSelect" onchange="onPurchaseCustomerChange()" required>
+                        <option value="">-- Choose Customer --</option>
+                    </select>
+
+                    <label for="purchaseMedicineSelect">Select Medicine *</label>
+                    <select id="purchaseMedicineSelect" onchange="onPurchaseMedicineChange()" required>
+                        <option value="">-- Choose Medicine --</option>
+                    </select>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="purchaseQty">Quantity *</label>
+                            <input type="number" id="purchaseQty" min="1" value="1" oninput="calculatePurchaseAmount()" required>
+                        </div>
+                        <div>
+                            <label for="purchaseAmount">Total Amount (₹) *</label>
+                            <input type="number" id="purchaseAmount" min="0" step="0.5" readonly required>
+                        </div>
+                    </div>
+
+                    <div id="purchaseStockNotice" style="font-size: 13px; color: #64748b;">
+                        Stock available: <span id="purchaseAvailableStock">--</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeModal('purchaseModal')">Cancel</button>
+                    <button type="submit" class="primary-button">Confirm & Deduct Stock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Add Transaction / Bill Modal -->
+    <div id="transactionModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Add Sales & Billing Transaction</h3>
+                <button class="modal-close-btn" onclick="closeModal('transactionModal')">&times;</button>
+            </div>
+            <form id="transactionForm" onsubmit="handleTransactionSubmit(event)">
+                <div class="modal-body">
+                    <label for="txCustomer">Customer Name *</label>
+                    <input type="text" id="txCustomer" required placeholder="e.g. Arun Kumar or Walk-in">
+
+                    <div class="form-row">
+                        <div>
+                            <label for="txItemsCount">Items Count *</label>
+                            <input type="number" id="txItemsCount" min="1" value="2" required>
+                        </div>
+                        <div>
+                            <label for="txAmount">Total Bill Amount (₹) *</label>
+                            <input type="number" id="txAmount" min="1" step="0.5" value="250.00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label for="txPaymentMethod">Payment Method</label>
+                            <select id="txPaymentMethod">
+                                <option value="Cash">Cash</option>
+                                <option value="UPI">UPI</option>
+                                <option value="Card">Card</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="txStatus">Payment Status</label>
+                            <select id="txStatus">
+                                <option value="Paid">Paid</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="cancel-btn" onclick="closeModal('transactionModal')">Cancel</button>
+                    <button type="submit" class="primary-button">Create Bill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. View Customer Modal -->
+    <div id="customerViewModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="viewCustTitle">Customer Details</h3>
+                <button class="modal-close-btn" onclick="closeModal('customerViewModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="viewCustBody">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="primary-button" onclick="closeModal('customerViewModal')">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="script.js"></script>
 

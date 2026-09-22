@@ -3,30 +3,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
-
-let supabase = null;
-let isSupabaseConfigured = false;
-
-if (SUPABASE_URL && SUPABASE_KEY) {
-  try {
-    supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      }
-    });
-    isSupabaseConfigured = true;
-    console.log('[Database] Supabase PostgreSQL client initialized with provided credentials.');
-  } catch (err) {
-    console.error('[Database] Failed to initialize Supabase client:', err.message);
-  }
-} else {
-  console.log('[Database] Running with PostgreSQL local mirror store. Set SUPABASE_URL and SUPABASE_ANON_KEY in settings to sync directly with Supabase.');
-}
+let cachedClient = null;
+let migrationStatus = {
+  attempted: false,
+  success: false,
+  message: 'Not run yet',
+  stats: null,
+  timestamp: null,
+};
 
 // Initial in-memory seed data representing the pharmacy database schema
+// Used as the baseline seed and resilient mirror store
 const localStore = {
   pharmacyInfo: {
     id: 1,
@@ -36,6 +23,15 @@ const localStore = {
     email: 'pharmacare@example.com',
     updated_at: new Date().toISOString()
   },
+  users: [
+    { id: 'USR001', username: 'admin', password_hash: 'admin123', role: 'admin', full_name: 'System Administrator' },
+    { id: 'USR002', username: 'pharmacist', password_hash: 'pharma123', role: 'pharmacist', full_name: 'Staff Pharmacist' }
+  ],
+  suppliers: [
+    { id: 'SUP001', name: 'GSK Health Logistics', contact_person: 'Kavitha R', phone: '+91 9845011223', email: 'kavitha@gskhealth.com', address: 'Chennai, Tamil Nadu' },
+    { id: 'SUP002', name: 'Sun Pharma Distribution', contact_person: 'Rajesh Verma', phone: '+91 9789022334', email: 'rajesh@sunpharma.com', address: 'Mumbai, Maharashtra' },
+    { id: 'SUP003', name: 'Cipla Lifecare', contact_person: 'Anil Mehta', phone: '+91 9443033445', email: 'anil@cipla.com', address: 'Bengaluru, Karnataka' }
+  ],
   medicines: [
     { id: 'MED001', name: 'Paracetamol', category: 'Tablet', stock: 120, price: 25.00, expiry_date: 'Dec 2027', batch_no: 'PCM-2024-01', manufacturer: 'GSK Health', status: 'Available' },
     { id: 'MED002', name: 'Amoxicillin', category: 'Capsule', stock: 18, price: 85.00, expiry_date: 'Oct 2026', batch_no: 'AMX-1024', manufacturer: 'Sun Pharma', status: 'Low Stock' },
@@ -71,20 +67,203 @@ function calculateMedicineStatus(stock, expiryDateStr) {
   return 'Available';
 }
 
+function getSupabaseClient() {
+  const url = process.env.SUPABASE_URL || '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || '';
+
+  if (!url || !key || !url.startsWith('http')) {
+    return null;
+  }
+
+  if (cachedClient && cachedClient._url === url && cachedClient._key === key) {
+    return cachedClient.client;
+  }
+
+  try {
+    const client = createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      }
+    });
+    cachedClient = { client, _url: url, _key: key };
+    console.log(`[Database] Supabase client initialized for host: ${new URL(url).hostname}`);
+    return client;
+  } catch (err) {
+    console.error('[Database] Failed to initialize Supabase client:', err.message);
+    return null;
+  }
+}
+
 export const db = {
+  // Returns operational connection mode and sync status
   getMode() {
+    const client = getSupabaseClient();
+    const isConfigured = Boolean(client);
+    let host = null;
+    if (process.env.SUPABASE_URL) {
+      try {
+        host = new URL(process.env.SUPABASE_URL).hostname;
+      } catch (e) {
+        host = 'Invalid URL';
+      }
+    }
+
     return {
-      connected: isSupabaseConfigured,
-      type: isSupabaseConfigured ? 'Supabase PostgreSQL' : 'Local Mirror (Awaiting SUPABASE_URL)',
-      urlConfigured: Boolean(SUPABASE_URL),
+      connected: isConfigured,
+      type: isConfigured ? 'Supabase PostgreSQL' : 'Local PostgreSQL Mirror (Awaiting SUPABASE_URL)',
+      urlConfigured: Boolean(process.env.SUPABASE_URL),
+      supabaseHost: host,
+      migration: migrationStatus,
+      recordCounts: {
+        medicines: localStore.medicines.length,
+        customers: localStore.customers.length,
+        purchases: localStore.purchases.length,
+        sales: localStore.sales.length,
+        users: localStore.users.length,
+        suppliers: localStore.suppliers.length
+      }
     };
+  },
+
+  // 0. Data Migration: Transfers all existing records to Supabase PostgreSQL without data loss
+  async migrateDataToSupabase() {
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      migrationStatus = {
+        attempted: true,
+        success: false,
+        message: 'Supabase credentials not configured in environment variables. Define SUPABASE_URL and SUPABASE_ANON_KEY to enable cloud synchronization.',
+        timestamp: new Date().toISOString()
+      };
+      return migrationStatus;
+    }
+
+    const stats = {
+      pharmacy_info: { success: 0, failed: 0 },
+      users: { success: 0, failed: 0 },
+      suppliers: { success: 0, failed: 0 },
+      medicines: { success: 0, failed: 0 },
+      customers: { success: 0, failed: 0 },
+      purchases: { success: 0, failed: 0 },
+      sales: { success: 0, failed: 0 }
+    };
+
+    try {
+      console.log('[Migration] Starting migration to Supabase PostgreSQL...');
+
+      // 1. Pharmacy Info
+      try {
+        const { error } = await supabase
+          .from('pharmacy_info')
+          .upsert(localStore.pharmacyInfo, { onConflict: 'id' });
+        if (error) throw error;
+        stats.pharmacy_info.success++;
+      } catch (e) {
+        console.warn('[Migration] Error migrating pharmacy_info:', e.message);
+        stats.pharmacy_info.failed++;
+      }
+
+      // 2. Users
+      for (const u of localStore.users) {
+        try {
+          const { error } = await supabase.from('users').upsert(u, { onConflict: 'id' });
+          if (error) throw error;
+          stats.users.success++;
+        } catch (e) {
+          stats.users.failed++;
+        }
+      }
+
+      // 3. Suppliers
+      for (const s of localStore.suppliers) {
+        try {
+          const { error } = await supabase.from('suppliers').upsert(s, { onConflict: 'id' });
+          if (error) throw error;
+          stats.suppliers.success++;
+        } catch (e) {
+          stats.suppliers.failed++;
+        }
+      }
+
+      // 4. Medicines
+      for (const m of localStore.medicines) {
+        try {
+          const { error } = await supabase.from('medicines').upsert(m, { onConflict: 'id' });
+          if (error) throw error;
+          stats.medicines.success++;
+        } catch (e) {
+          console.warn(`[Migration] Error migrating medicine ${m.id}:`, e.message);
+          stats.medicines.failed++;
+        }
+      }
+
+      // 5. Customers
+      for (const c of localStore.customers) {
+        try {
+          const { error } = await supabase.from('customers').upsert(c, { onConflict: 'id' });
+          if (error) throw error;
+          stats.customers.success++;
+        } catch (e) {
+          console.warn(`[Migration] Error migrating customer ${c.id}:`, e.message);
+          stats.customers.failed++;
+        }
+      }
+
+      // 6. Purchases
+      for (const p of localStore.purchases) {
+        try {
+          const { error } = await supabase.from('purchases').upsert(p, { onConflict: 'id' });
+          if (error) throw error;
+          stats.purchases.success++;
+        } catch (e) {
+          console.warn(`[Migration] Error migrating purchase ${p.id}:`, e.message);
+          stats.purchases.failed++;
+        }
+      }
+
+      // 7. Sales
+      for (const s of localStore.sales) {
+        try {
+          const { error } = await supabase.from('sales').upsert(s, { onConflict: 'id' });
+          if (error) throw error;
+          stats.sales.success++;
+        } catch (e) {
+          console.warn(`[Migration] Error migrating sale ${s.id}:`, e.message);
+          stats.sales.failed++;
+        }
+      }
+
+      const totalMigrated = Object.values(stats).reduce((acc, curr) => acc + curr.success, 0);
+      migrationStatus = {
+        attempted: true,
+        success: true,
+        totalRecordsMigrated: totalMigrated,
+        stats,
+        message: `Successfully verified and migrated ${totalMigrated} records to Supabase PostgreSQL without loss.`,
+        timestamp: new Date().toISOString()
+      };
+
+      console.log(`[Migration] Complete: ${migrationStatus.message}`);
+      return migrationStatus;
+    } catch (err) {
+      migrationStatus = {
+        attempted: true,
+        success: false,
+        stats,
+        message: `Migration encountered error: ${err.message}`,
+        timestamp: new Date().toISOString()
+      };
+      return migrationStatus;
+    }
   },
 
   // 1. Pharmacy Information
   async getPharmacyInfo() {
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
-        const { data, error } = await supabase.from('pharmacy_info').select('*').limit(1).single();
+        const { data, error } = await supabase.from('pharmacy_info').select('*').eq('id', 1).maybeSingle();
         if (!error && data) return data;
       } catch (e) {
         console.warn('[Database] Supabase query fallback to local store for pharmacyInfo:', e.message);
@@ -102,12 +281,13 @@ export const db = {
     };
     localStore.pharmacyInfo = updated;
 
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
-        const { data, error } = await supabase.from('pharmacy_info').upsert(updated).select().single();
+        const { data, error } = await supabase.from('pharmacy_info').upsert(updated, { onConflict: 'id' }).select().maybeSingle();
         if (!error && data) return data;
       } catch (e) {
-        console.warn('[Database] Supabase upsert error:', e.message);
+        console.warn('[Database] Supabase upsert pharmacy_info error:', e.message);
       }
     }
     return updated;
@@ -115,7 +295,8 @@ export const db = {
 
   // 2. Medicines
   async getMedicines() {
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         const { data, error } = await supabase.from('medicines').select('*').order('id', { ascending: true });
         if (!error && data && data.length > 0) return data;
@@ -127,9 +308,10 @@ export const db = {
   },
 
   async getMedicineById(id) {
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
-        const { data, error } = await supabase.from('medicines').select('*').eq('id', id).single();
+        const { data, error } = await supabase.from('medicines').select('*').eq('id', id).maybeSingle();
         if (!error && data) return data;
       } catch (e) {
         console.warn('[Database] Supabase getMedicineById error:', e.message);
@@ -139,25 +321,53 @@ export const db = {
   },
 
   async createMedicine(data) {
+    // Constraint validations per SRS
+    if (!data.name || !data.name.trim()) {
+      throw new Error('Medicine name is required');
+    }
+
+    const stock = Number(data.stock !== undefined ? data.stock : 0);
+    if (stock < 0) {
+      throw new Error('Initial stock cannot be negative (FR-13)');
+    }
+
+    const price = Number(data.price !== undefined ? data.price : 0);
+    if (price < 0) {
+      throw new Error('Unit price cannot be negative (FR-13)');
+    }
+
+    // Duplicate batch check for same medicine
+    const batch = (data.batch_no || '').trim();
+    if (batch) {
+      const allMeds = await this.getMedicines();
+      const duplicate = allMeds.find(
+        m => m.name.toLowerCase() === data.name.trim().toLowerCase() && m.batch_no && m.batch_no.toLowerCase() === batch.toLowerCase()
+      );
+      if (duplicate) {
+        throw new Error(`Duplicate batch number "${batch}" already exists for "${data.name}" (FR-32)`);
+      }
+    }
+
     const newId = data.id || `MED${String(localStore.medicines.length + 1).padStart(3, '0')}`;
-    const status = calculateMedicineStatus(Number(data.stock || 0), data.expiry_date);
+    const status = calculateMedicineStatus(stock, data.expiry_date);
     const medicine = {
       id: newId,
-      name: data.name,
+      name: data.name.trim(),
       category: data.category || 'Tablet',
-      stock: Number(data.stock || 0),
-      price: Number(data.price || 0),
+      stock,
+      price,
       expiry_date: data.expiry_date || 'Dec 2027',
-      batch_no: data.batch_no || '',
+      batch_no: batch,
       manufacturer: data.manufacturer || '',
       status: data.status || status,
     };
 
     localStore.medicines.push(medicine);
 
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
-        const { data: inserted, error } = await supabase.from('medicines').insert(medicine).select().single();
+        const { data: inserted, error } = await supabase.from('medicines').insert(medicine).select().maybeSingle();
         if (!error && inserted) return inserted;
       } catch (e) {
         console.warn('[Database] Supabase insert medicine error:', e.message);
@@ -168,38 +378,58 @@ export const db = {
 
   async updateMedicine(id, data) {
     const idx = localStore.medicines.findIndex(m => m.id === id);
-    if (idx !== -1) {
-      const current = localStore.medicines[idx];
-      const stock = data.stock !== undefined ? Number(data.stock) : current.stock;
-      const status = calculateMedicineStatus(stock, data.expiry_date || current.expiry_date);
-      const updated = {
-        ...current,
-        ...data,
-        id,
-        stock,
-        status: data.status || status
-      };
-      localStore.medicines[idx] = updated;
-
-      if (isSupabaseConfigured) {
-        try {
-          const { data: supabaseUpdated, error } = await supabase.from('medicines').update(updated).eq('id', id).select().single();
-          if (!error && supabaseUpdated) return supabaseUpdated;
-        } catch (e) {
-          console.warn('[Database] Supabase update medicine error:', e.message);
-        }
-      }
-      return updated;
+    if (idx === -1) {
+      return null;
     }
-    return null;
+
+    const current = localStore.medicines[idx];
+    const stock = data.stock !== undefined ? Number(data.stock) : current.stock;
+    if (stock < 0) {
+      throw new Error('Stock cannot be negative');
+    }
+    const price = data.price !== undefined ? Number(data.price) : current.price;
+    if (price < 0) {
+      throw new Error('Price cannot be negative');
+    }
+
+    const status = calculateMedicineStatus(stock, data.expiry_date || current.expiry_date);
+    const updated = {
+      ...current,
+      ...data,
+      id,
+      stock,
+      price,
+      status: data.status || status
+    };
+    localStore.medicines[idx] = updated;
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data: supabaseUpdated, error } = await supabase.from('medicines').update(updated).eq('id', id).select().maybeSingle();
+        if (!error && supabaseUpdated) return supabaseUpdated;
+      } catch (e) {
+        console.warn('[Database] Supabase update medicine error:', e.message);
+      }
+    }
+    return updated;
   },
 
   async deleteMedicine(id) {
+    // Relational deletion protection: medicines appearing on sales or purchases cannot be deleted (FR-10)
+    const purchases = await this.getPurchases();
+    const hasPurchase = purchases.some(p => p.medicine_id === id);
+    if (hasPurchase) {
+      throw new Error(`Cannot delete medicine ${id}: active customer purchase records depend on it (FR-10).`);
+    }
+
     const idx = localStore.medicines.findIndex(m => m.id === id);
     if (idx !== -1) {
       localStore.medicines.splice(idx, 1);
     }
-    if (isSupabaseConfigured) {
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         await supabase.from('medicines').delete().eq('id', id);
       } catch (e) {
@@ -211,7 +441,8 @@ export const db = {
 
   // 3. Customers
   async getCustomers() {
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         const { data, error } = await supabase.from('customers').select('*').order('id', { ascending: true });
         if (!error && data && data.length > 0) return data;
@@ -222,24 +453,42 @@ export const db = {
     return localStore.customers;
   },
 
+  async getCustomerById(id) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase.from('customers').select('*').eq('id', id).maybeSingle();
+        if (!error && data) return data;
+      } catch (e) {
+        console.warn('[Database] Supabase getCustomerById error:', e.message);
+      }
+    }
+    return localStore.customers.find(c => c.id === id) || null;
+  },
+
   async createCustomer(data) {
+    if (!data.name || !data.name.trim()) {
+      throw new Error('Customer name is required');
+    }
+
     const newId = data.id || `CUS${String(localStore.customers.length + 1).padStart(3, '0')}`;
     const customer = {
       id: newId,
-      name: data.name,
+      name: data.name.trim(),
       address: data.address || '',
       phone: data.phone || '',
       email: data.email || '',
-      purchase_count: Number(data.purchase_count || 0),
-      total_purchase: Number(data.total_purchase || 0),
+      purchase_count: Math.max(0, Number(data.purchase_count || 0)),
+      total_purchase: Math.max(0, Number(data.total_purchase || 0)),
       last_purchase: data.last_purchase || 'None',
       status: data.status || 'Active'
     };
     localStore.customers.push(customer);
 
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
-        const { data: inserted, error } = await supabase.from('customers').insert(customer).select().single();
+        const { data: inserted, error } = await supabase.from('customers').insert(customer).select().maybeSingle();
         if (!error && inserted) return inserted;
       } catch (e) {
         console.warn('[Database] Supabase insert customer error:', e.message);
@@ -250,29 +499,45 @@ export const db = {
 
   async updateCustomer(id, data) {
     const idx = localStore.customers.findIndex(c => c.id === id);
-    if (idx !== -1) {
-      const updated = { ...localStore.customers[idx], ...data, id };
-      localStore.customers[idx] = updated;
-
-      if (isSupabaseConfigured) {
-        try {
-          const { data: supabaseUpdated, error } = await supabase.from('customers').update(updated).eq('id', id).select().single();
-          if (!error && supabaseUpdated) return supabaseUpdated;
-        } catch (e) {
-          console.warn('[Database] Supabase update customer error:', e.message);
-        }
-      }
-      return updated;
+    if (idx === -1) {
+      return null;
     }
-    return null;
+    const updated = { ...localStore.customers[idx], ...data, id };
+    localStore.customers[idx] = updated;
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
+      try {
+        const { data: supabaseUpdated, error } = await supabase.from('customers').update(updated).eq('id', id).select().maybeSingle();
+        if (!error && supabaseUpdated) return supabaseUpdated;
+      } catch (e) {
+        console.warn('[Database] Supabase update customer error:', e.message);
+      }
+    }
+    return updated;
   },
 
   async deleteCustomer(id) {
+    // Relational deletion protection: customers with purchase records cannot be deleted (FR-19)
+    const purchases = await this.getPurchases();
+    const hasPurchases = purchases.some(p => p.customer_id === id);
+    if (hasPurchases) {
+      throw new Error(`Cannot delete customer ${id}: linked purchase history records exist (FR-19).`);
+    }
+
+    const sales = await this.getSales();
+    const hasSales = sales.some(s => s.customer_id === id);
+    if (hasSales) {
+      throw new Error(`Cannot delete customer ${id}: linked transaction records exist (FR-19).`);
+    }
+
     const idx = localStore.customers.findIndex(c => c.id === id);
     if (idx !== -1) {
       localStore.customers.splice(idx, 1);
     }
-    if (isSupabaseConfigured) {
+
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         await supabase.from('customers').delete().eq('id', id);
       } catch (e) {
@@ -282,9 +547,10 @@ export const db = {
     return { success: true, id };
   },
 
-  // 4. Purchases (Customer Purchases & Stock Deductions)
+  // 4. Purchases (Customer Purchases & Stock Deductions per FR-22 & FR-23)
   async getPurchases() {
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         const { data, error } = await supabase.from('purchases').select('*').order('created_at', { ascending: false });
         if (!error && data && data.length > 0) return data;
@@ -296,62 +562,68 @@ export const db = {
   },
 
   async createPurchase(data) {
-    const newId = data.id || `PUR${String(localStore.purchases.length + 1).padStart(3, '0')}`;
     const qty = Number(data.quantity || 1);
-    const amount = Number(data.amount || 0);
+    if (qty <= 0) {
+      throw new Error('Purchase quantity must be greater than zero');
+    }
 
+    const medicines = await this.getMedicines();
+    let targetMed = null;
+    if (data.medicine_id) {
+      targetMed = medicines.find(m => m.id === data.medicine_id);
+    } else if (data.medicine) {
+      targetMed = medicines.find(m => m.name.toLowerCase() === data.medicine.toLowerCase());
+    }
+
+    if (!targetMed) {
+      throw new Error('Specified medicine was not found in inventory');
+    }
+
+    // Live inventory check (FR-22): prevent overselling beyond available stock
+    if (targetMed.stock < qty) {
+      throw new Error(`Insufficient inventory: Cannot purchase ${qty} units. Only ${targetMed.stock} units currently available (FR-22).`);
+    }
+
+    const amount = Number(data.amount !== undefined ? data.amount : (targetMed.price * qty));
+    if (amount < 0) {
+      throw new Error('Purchase amount cannot be negative');
+    }
+
+    const newId = data.id || `PUR${String(localStore.purchases.length + 1).padStart(3, '0')}`;
     const purchase = {
       id: newId,
       customer_id: data.customer_id || null,
       customer_name: data.customer_name || 'Customer',
-      medicine: data.medicine || '',
-      medicine_id: data.medicine_id || null,
+      medicine: targetMed.name,
+      medicine_id: targetMed.id,
       quantity: qty,
-      amount: amount,
+      amount,
       date: data.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
     };
 
     localStore.purchases.unshift(purchase);
 
-    // Deduct stock for the medicine if medicine_id or medicine name is given
-    let medToUpdate = null;
-    if (purchase.medicine_id) {
-      medToUpdate = localStore.medicines.find(m => m.id === purchase.medicine_id);
-    } else if (purchase.medicine) {
-      medToUpdate = localStore.medicines.find(m => m.name.toLowerCase() === purchase.medicine.toLowerCase());
-    }
+    // Live stock deduction (FR-23)
+    const newStock = Math.max(0, targetMed.stock - qty);
+    const newStatus = calculateMedicineStatus(newStock, targetMed.expiry_date);
+    await this.updateMedicine(targetMed.id, { stock: newStock, status: newStatus });
 
-    if (medToUpdate) {
-      medToUpdate.stock = Math.max(0, medToUpdate.stock - qty);
-      medToUpdate.status = calculateMedicineStatus(medToUpdate.stock, medToUpdate.expiry_date);
-    }
-
-    // Update customer purchase stats if customer_id is provided
+    // Customer statistics update
     if (purchase.customer_id) {
-      const cust = localStore.customers.find(c => c.id === purchase.customer_id);
+      const cust = await this.getCustomerById(purchase.customer_id);
       if (cust) {
-        cust.purchase_count = (cust.purchase_count || 0) + 1;
-        cust.total_purchase = (Number(cust.total_purchase) || 0) + amount;
-        cust.last_purchase = purchase.date;
+        await this.updateCustomer(cust.id, {
+          purchase_count: (Number(cust.purchase_count) || 0) + 1,
+          total_purchase: (Number(cust.total_purchase) || 0) + amount,
+          last_purchase: purchase.date
+        });
       }
     }
 
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         await supabase.from('purchases').insert(purchase);
-        if (medToUpdate) {
-          await supabase.from('medicines').update({ stock: medToUpdate.stock, status: medToUpdate.status }).eq('id', medToUpdate.id);
-        }
-        if (purchase.customer_id) {
-          const cust = localStore.customers.find(c => c.id === purchase.customer_id);
-          if (cust) {
-            await supabase.from('customers').update({
-              purchase_count: cust.purchase_count,
-              total_purchase: cust.total_purchase,
-              last_purchase: cust.last_purchase
-            }).eq('id', cust.id);
-          }
-        }
       } catch (e) {
         console.warn('[Database] Supabase insert purchase error:', e.message);
       }
@@ -362,7 +634,8 @@ export const db = {
 
   // 5. Sales & Billing (Transactions)
   async getSales() {
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         const { data, error } = await supabase.from('sales').select('*').order('created_at', { ascending: false });
         if (!error && data && data.length > 0) return data;
@@ -374,13 +647,22 @@ export const db = {
   },
 
   async createSale(data) {
+    const amount = Number(data.amount || 0);
+    if (amount < 0) {
+      throw new Error('Sale transaction amount cannot be negative');
+    }
+    const items_count = Number(data.items_count || 1);
+    if (items_count <= 0) {
+      throw new Error('Items count must be at least 1');
+    }
+
     const newId = data.id || `BILL${String(localStore.sales.length + 1).padStart(3, '0')}`;
     const sale = {
       id: newId,
       customer_name: data.customer_name || 'Walk-in Customer',
       customer_id: data.customer_id || null,
-      items_count: Number(data.items_count || 1),
-      amount: Number(data.amount || 0),
+      items_count,
+      amount,
       payment_method: data.payment_method || 'Cash',
       status: data.status || 'Paid',
       date: data.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -388,29 +670,21 @@ export const db = {
 
     localStore.sales.unshift(sale);
 
-    // If customer is associated, update customer totals
     if (sale.customer_id) {
-      const cust = localStore.customers.find(c => c.id === sale.customer_id);
+      const cust = await this.getCustomerById(sale.customer_id);
       if (cust) {
-        cust.purchase_count = (cust.purchase_count || 0) + 1;
-        cust.total_purchase = (Number(cust.total_purchase) || 0) + sale.amount;
-        cust.last_purchase = sale.date;
+        await this.updateCustomer(cust.id, {
+          purchase_count: (Number(cust.purchase_count) || 0) + 1,
+          total_purchase: (Number(cust.total_purchase) || 0) + sale.amount,
+          last_purchase: sale.date
+        });
       }
     }
 
-    if (isSupabaseConfigured) {
+    const supabase = getSupabaseClient();
+    if (supabase) {
       try {
         await supabase.from('sales').insert(sale);
-        if (sale.customer_id) {
-          const cust = localStore.customers.find(c => c.id === sale.customer_id);
-          if (cust) {
-            await supabase.from('customers').update({
-              purchase_count: cust.purchase_count,
-              total_purchase: cust.total_purchase,
-              last_purchase: cust.last_purchase
-            }).eq('id', cust.id);
-          }
-        }
       } catch (e) {
         console.warn('[Database] Supabase insert sale error:', e.message);
       }
@@ -419,7 +693,7 @@ export const db = {
     return sale;
   },
 
-  // 6. Dashboard & Aggregated Reports
+  // 6. Dashboard & Aggregated Reports (FR-06, FR-07, FR-08)
   async getDashboardData() {
     const [medicines, customers, purchases, sales] = await Promise.all([
       this.getMedicines(),

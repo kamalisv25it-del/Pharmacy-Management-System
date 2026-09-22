@@ -30,7 +30,8 @@ function showSection(sectionId) {
         customers: "Customer Management",
         purchases: "Purchase Management",
         transactions: "Sales & Billing",
-        records: "Search & Records"
+        records: "Search & Records",
+        'ai-assistant': "AI Intelligence Assistant"
     };
 
     const titleEl = document.getElementById("pageTitle");
@@ -64,6 +65,7 @@ function showSection(sectionId) {
     else if (sectionId === "customers") loadCustomers();
     else if (sectionId === "purchases") loadPurchases();
     else if (sectionId === "transactions") loadSales();
+    else if (sectionId === "ai-assistant") initAiSection();
 }
 
 /* SIDEBAR TOGGLE */
@@ -114,7 +116,7 @@ document.addEventListener("click", function(e) {
     }
 });
 
-/* 1. DATABASE STATUS */
+/* 1. DATABASE STATUS & MIGRATION */
 async function fetchDbStatus() {
     try {
         const res = await fetch('/api/db-status');
@@ -123,19 +125,94 @@ async function fetchDbStatus() {
         const text = document.getElementById("dbStatusText");
         const sidebarMode = document.getElementById("sidebarDbMode");
 
+        // Migration card elements
+        const migBadge = document.getElementById("migrationStatusBadge");
+        const migMode = document.getElementById("migrationModeText");
+        const migHost = document.getElementById("migrationHostText");
+
         if (data.connected) {
-            badge.className = "db-pill";
-            badge.title = "Connected to Supabase PostgreSQL";
-            text.textContent = "Supabase PostgreSQL Connected";
-            sidebarMode.textContent = "Supabase PostgreSQL";
+            if (badge) {
+                badge.className = "db-pill";
+                badge.title = "Connected to Supabase PostgreSQL";
+            }
+            if (text) text.textContent = "Supabase PostgreSQL Connected";
+            if (sidebarMode) sidebarMode.textContent = "Supabase PostgreSQL";
+            if (migBadge) {
+                migBadge.className = "status active-status";
+                migBadge.textContent = "Connected to Cloud";
+            }
         } else {
-            badge.className = "db-pill waiting";
-            badge.title = "Local PostgreSQL mirror running. Add SUPABASE_URL in settings to connect cloud instance.";
-            text.textContent = "PostgreSQL (Mirror Mode)";
-            sidebarMode.textContent = "PostgreSQL Mirror";
+            if (badge) {
+                badge.className = "db-pill waiting";
+                badge.title = "Local PostgreSQL mirror running. Add SUPABASE_URL in settings to connect cloud instance.";
+            }
+            if (text) text.textContent = "PostgreSQL (Mirror Mode)";
+            if (sidebarMode) sidebarMode.textContent = "PostgreSQL Mirror";
+            if (migBadge) {
+                migBadge.className = "status warning-status";
+                migBadge.textContent = "Local Mirror Mode";
+            }
+        }
+
+        if (migMode) migMode.textContent = data.type;
+        if (migHost) migHost.textContent = data.supabaseHost || "Awaiting SUPABASE_URL";
+
+        if (data.recordCounts) {
+            const setIf = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            setIf("statMeds", data.recordCounts.medicines);
+            setIf("statCusts", data.recordCounts.customers);
+            setIf("statPurchases", data.recordCounts.purchases);
+            setIf("statSales", data.recordCounts.sales);
+            setIf("statUsers", data.recordCounts.users);
+            setIf("statSuppliers", data.recordCounts.suppliers);
         }
     } catch (e) {
         console.warn("Could not check database status:", e);
+    }
+}
+
+async function runSupabaseMigration() {
+    const btn = document.getElementById("btnRunMigration");
+    const outBox = document.getElementById("migrationOutputBox");
+    if (!btn) return;
+
+    try {
+        btn.textContent = "Migrating...";
+        btn.disabled = true;
+
+        const res = await fetch('/api/migrate', { method: 'POST' });
+        const data = await res.json();
+
+        if (outBox) {
+            outBox.style.display = "block";
+            if (data.success) {
+                outBox.style.background = "#ecfdf5";
+                outBox.style.border = "1px solid #a7f3d0";
+                outBox.style.color = "#065f46";
+                outBox.innerHTML = `<strong>Migration Success:</strong> ${escapeHtml(data.message)}`;
+                showToast("All records synchronized to Supabase PostgreSQL!");
+            } else {
+                outBox.style.background = "#fffbeb";
+                outBox.style.border = "1px solid #fde68a";
+                outBox.style.color = "#92400e";
+                outBox.innerHTML = `<strong>Migration Notice:</strong> ${escapeHtml(data.message)}`;
+                showToast(data.message);
+            }
+        }
+
+        await fetchDbStatus();
+    } catch (err) {
+        if (outBox) {
+            outBox.style.display = "block";
+            outBox.style.background = "#fef2f2";
+            outBox.style.border = "1px solid #fecaca";
+            outBox.style.color = "#991b1b";
+            outBox.textContent = "Failed to communicate with migration endpoint.";
+        }
+        showToast("Migration communication error");
+    } finally {
+        btn.textContent = "Migrate Data to Supabase";
+        btn.disabled = false;
     }
 }
 
@@ -378,7 +455,8 @@ async function deleteMedicine(id) {
             loadMedicines();
             loadDashboard();
         } else {
-            showToast("Failed to delete medicine.");
+            const errData = await res.json().catch(() => ({}));
+            showToast(errData.error || "Failed to delete medicine.");
         }
     } catch (err) {
         showToast("Database communication error");
@@ -465,7 +543,8 @@ async function handleCustomerSubmit(e) {
             loadCustomers();
             loadDashboard();
         } else {
-            showToast("Failed to create customer.");
+            const errData = await res.json().catch(() => ({}));
+            showToast(errData.error || "Failed to create customer.");
         }
     } catch (err) {
         showToast("Database communication error");
@@ -482,7 +561,8 @@ async function deleteCustomer(id) {
             loadCustomers();
             loadDashboard();
         } else {
-            showToast("Failed to delete customer.");
+            const errData = await res.json().catch(() => ({}));
+            showToast(errData.error || "Failed to delete customer.");
         }
     } catch (err) {
         showToast("Database communication error");
@@ -646,7 +726,8 @@ async function handlePurchaseSubmit(e) {
             loadCustomers();
             loadDashboard();
         } else {
-            showToast("Failed to record purchase.");
+            const errData = await res.json().catch(() => ({}));
+            showToast(errData.error || "Failed to record purchase.");
         }
     } catch (err) {
         showToast("Database communication error");
@@ -712,7 +793,8 @@ async function handleTransactionSubmit(e) {
             loadSales();
             loadDashboard();
         } else {
-            showToast("Failed to create transaction.");
+            const errData = await res.json().catch(() => ({}));
+            showToast(errData.error || "Failed to create transaction.");
         }
     } catch (err) {
         showToast("Database communication error");
@@ -832,6 +914,153 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/* ========================================================
+   AI INTELLIGENCE ASSISTANT (GEMINI 3.8 FLASH)
+   ======================================================== */
+
+let currentAiQueryType = 'custom';
+
+async function initAiSection() {
+    try {
+        const res = await fetch('/api/ai/status');
+        const data = await res.json();
+        const badge = document.getElementById('aiEngineStatusBadge');
+        const text = document.getElementById('aiEngineStatusText');
+        if (text && badge) {
+            if (data.geminiConfigured) {
+                badge.className = 'status active-status';
+                text.textContent = 'Gemini 3.8 Flash • Online';
+            } else {
+                badge.className = 'status pending-status';
+                text.textContent = 'Local Analytics Engine';
+            }
+        }
+    } catch (e) {
+        console.error('Failed to fetch AI status:', e);
+    }
+}
+
+function triggerPresetQuery(type, promptText) {
+    const input = document.getElementById('aiQueryInput');
+    if (input) {
+        input.value = promptText;
+    }
+    currentAiQueryType = type;
+    executeAiAnalysis(promptText, type);
+}
+
+function clearAiQuery() {
+    const input = document.getElementById('aiQueryInput');
+    if (input) input.value = '';
+    currentAiQueryType = 'custom';
+    showAiState('empty');
+}
+
+async function handleAiQuerySubmit(event) {
+    if (event) event.preventDefault();
+    const input = document.getElementById('aiQueryInput');
+    const query = input ? input.value.trim() : '';
+    if (!query) {
+        showToast('Please enter an inquiry or choose a suggested audit.');
+        return;
+    }
+    executeAiAnalysis(query, currentAiQueryType || 'custom');
+}
+
+function showAiState(state) {
+    const emptyState = document.getElementById('aiEmptyState');
+    const loadingState = document.getElementById('aiLoadingState');
+    const errorState = document.getElementById('aiErrorState');
+    const resultContent = document.getElementById('aiResultContent');
+
+    if (emptyState) emptyState.style.display = state === 'empty' ? 'block' : 'none';
+    if (loadingState) loadingState.style.display = state === 'loading' ? 'block' : 'none';
+    if (errorState) errorState.style.display = state === 'error' ? 'block' : 'none';
+    if (resultContent) resultContent.style.display = state === 'result' ? 'block' : 'none';
+}
+
+async function executeAiAnalysis(query, type) {
+    showAiState('loading');
+    const btn = document.getElementById('btnAskAi');
+    if (btn) btn.disabled = true;
+
+    try {
+        const response = await fetch('/api/ai/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, type })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Server returned HTTP ${response.status}`);
+        }
+
+        const resData = await response.json();
+        if (!resData.success || !resData.data) {
+            throw new Error(resData.error || 'Failed to process AI insights.');
+        }
+
+        renderAiResult(resData.data, resData);
+        showAiState('result');
+    } catch (err) {
+        console.error('AI Analysis failed:', err);
+        const errMsg = document.getElementById('aiErrorMessage');
+        if (errMsg) errMsg.textContent = err.message || 'Error communicating with AI service.';
+        showAiState('error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+function renderAiResult(data, meta) {
+    const titleEl = document.getElementById('aiResultTitle');
+    const metaEl = document.getElementById('aiResultMeta');
+    const summaryEl = document.getElementById('aiResultSummary');
+    const badgeEl = document.getElementById('aiModelBadge');
+    const insightsEl = document.getElementById('aiResultInsights');
+    const recsEl = document.getElementById('aiResultRecommendations');
+
+    if (titleEl) titleEl.textContent = data.title || 'Pharmacy Intelligence Report';
+    if (summaryEl) summaryEl.textContent = data.summary || 'Summary unavailable.';
+    if (metaEl) {
+        const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        metaEl.textContent = `${meta.message || 'Live Grounded'} • Generated at ${timestamp}`;
+    }
+    if (badgeEl) {
+        badgeEl.textContent = meta.model || 'Gemini 3.8 Flash';
+    }
+
+    if (insightsEl) {
+        insightsEl.innerHTML = '';
+        const insights = Array.isArray(data.insights) ? data.insights : [];
+        if (insights.length === 0) {
+            insightsEl.innerHTML = '<li style="color: #64748b;">No specific data anomalies detected.</li>';
+        } else {
+            insights.forEach(text => {
+                const li = document.createElement('li');
+                li.className = 'insight-card';
+                const sanitized = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                li.innerHTML = `<span class="bullet-icon">▸</span><div>${sanitized}</div>`;
+                insightsEl.appendChild(li);
+            });
+        }
+    }
+
+    if (recsEl) {
+        recsEl.innerHTML = '';
+        const recs = Array.isArray(data.recommendations) ? data.recommendations : [];
+        if (recs.length === 0) {
+            recsEl.innerHTML = '<li>Catalog metrics are well-balanced; proceed with routine dispensing.</li>';
+        } else {
+            recs.forEach(rec => {
+                const li = document.createElement('li');
+                li.innerHTML = escapeHtml(rec).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                recsEl.appendChild(li);
+            });
+        }
+    }
 }
 
 /* PAGE INITIALIZATION */

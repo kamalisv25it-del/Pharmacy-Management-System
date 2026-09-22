@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { db } from './db.js';
+import { analyzePharmacyData } from './ai.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,13 +16,45 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the frontend folder
 app.use(express.static(path.join(__dirname, 'frontend')));
 
-// 1. Health & Database Status
+// 1. Health, Database & AI Status
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/db-status', (req, res) => {
   res.json(db.getMode());
+});
+
+app.get('/api/ai/status', (req, res) => {
+  res.json({
+    geminiConfigured: Boolean(process.env.GEMINI_API_KEY),
+    model: 'gemini-3.8-flash'
+  });
+});
+
+app.post('/api/ai/analyze', async (req, res) => {
+  try {
+    const { query, type } = req.body || {};
+    const result = await analyzePharmacyData(query, type);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Data Migration Endpoint: Trigger cloud synchronization to Supabase PostgreSQL
+app.post('/api/migrate', async (req, res) => {
+  try {
+    const report = await db.migrateDataToSupabase();
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/migrate/status', (req, res) => {
+  const mode = db.getMode();
+  res.json({ migration: mode.migration, mode: mode.type });
 });
 
 // 2. Dashboard Aggregates
@@ -49,7 +82,7 @@ app.put('/api/pharmacy', async (req, res) => {
     const updated = await db.updatePharmacyInfo(req.body);
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -90,7 +123,7 @@ app.post('/api/medicines', async (req, res) => {
     const newMed = await db.createMedicine({ name, category, stock, price, expiry_date, batch_no, manufacturer });
     res.status(201).json(newMed);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -100,7 +133,7 @@ app.put('/api/medicines/:id', async (req, res) => {
     if (!updated) return res.status(404).json({ error: 'Medicine not found' });
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -109,7 +142,7 @@ app.delete('/api/medicines/:id', async (req, res) => {
     const result = await db.deleteMedicine(req.params.id);
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -140,7 +173,7 @@ app.post('/api/customers', async (req, res) => {
     const customer = await db.createCustomer({ name, address, phone, email, status });
     res.status(201).json(customer);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -150,7 +183,7 @@ app.put('/api/customers/:id', async (req, res) => {
     if (!updated) return res.status(404).json({ error: 'Customer not found' });
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -159,7 +192,7 @@ app.delete('/api/customers/:id', async (req, res) => {
     const result = await db.deleteCustomer(req.params.id);
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -176,7 +209,7 @@ app.get('/api/purchases', async (req, res) => {
 app.post('/api/purchases', async (req, res) => {
   try {
     const { customer_id, customer_name, medicine, medicine_id, quantity, amount, date } = req.body;
-    if (!medicine) return res.status(400).json({ error: 'Medicine name is required' });
+    if (!medicine && !medicine_id) return res.status(400).json({ error: 'Medicine selection is required' });
     const purchase = await db.createPurchase({
       customer_id,
       customer_name,
@@ -188,7 +221,7 @@ app.post('/api/purchases', async (req, res) => {
     });
     res.status(201).json(purchase);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 
@@ -216,7 +249,7 @@ app.post('/api/sales', async (req, res) => {
     });
     res.status(201).json(sale);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(400).json({ error: err.message });
   }
 });
 

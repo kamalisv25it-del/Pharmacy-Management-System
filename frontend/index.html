@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>PharmaCare - Pharmacy Management System</title>
-    <meta name="description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing with Supabase PostgreSQL.">
+    <meta name="description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing.">
     <meta property="og:title" content="PharmaCare - Pharmacy Management System">
-    <meta property="og:description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing with Supabase PostgreSQL.">
+    <meta property="og:description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing.">
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -60,6 +60,11 @@
             <button class="nav-item" onclick="showSection('records')">
                 <span>🔎</span>
                 Search & Records
+            </button>
+
+            <button class="nav-item" onclick="showSection('ai-assistant')">
+                <span>✨</span>
+                AI Assistant
             </button>
 
         </nav>
@@ -388,6 +393,11 @@
                         Sales & Billing
                     </button>
 
+                    <button onclick="showSection('ai-assistant')" style="border-color: #93c5fd; background: #eff6ff;">
+                        <span>✨</span>
+                        AI Assistant
+                    </button>
+
                 </div>
 
             </div>
@@ -425,6 +435,51 @@
                     <button class="primary-button" id="btnSavePharmacy" onclick="savePharmacyDetails()">
                         Save Details
                     </button>
+                </div>
+
+                <div class="form-card" id="supabaseMigrationCard">
+                    <h3>Supabase PostgreSQL Database</h3>
+                    <p style="font-size: 12px; color: #64748b; margin-bottom: 14px;">
+                        Manage cloud synchronization, schema compliance, and data migration to your Supabase project.
+                    </p>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #64748b;">Connection State:</span>
+                            <span id="migrationStatusBadge" class="status active-status" style="font-size: 11px;">Checking...</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #64748b;">Active Mode:</span>
+                            <strong id="migrationModeText">Local PostgreSQL Mirror</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #64748b;">Target Host:</span>
+                            <span id="migrationHostText" style="font-family: monospace;">Awaiting SUPABASE_URL</span>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 12px;">
+                        <div style="font-weight: 600; margin-bottom: 8px; color: #1e293b;">Tables & Records Managed:</div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; color: #475569;">
+                            <div>💊 Medicines: <strong id="statMeds">7</strong></div>
+                            <div>👥 Customers: <strong id="statCusts">5</strong></div>
+                            <div>🛒 Purchases: <strong id="statPurchases">4</strong></div>
+                            <div>💰 Sales/Bills: <strong id="statSales">3</strong></div>
+                            <div>🔐 Staff Users: <strong id="statUsers">2</strong></div>
+                            <div>🏢 Suppliers: <strong id="statSuppliers">3</strong></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button class="primary-button" id="btnRunMigration" onclick="runSupabaseMigration()">
+                            Migrate Data to Supabase
+                        </button>
+                        <button class="small-button" onclick="fetchDbStatus()" style="padding: 10px 14px; font-size: 11px;">
+                            Refresh Status
+                        </button>
+                    </div>
+
+                    <div id="migrationOutputBox" style="margin-top: 14px; font-size: 11px; padding: 10px; border-radius: 8px; display: none;"></div>
                 </div>
 
             </div>
@@ -752,6 +807,127 @@
 
                 <div id="searchResultsContainer" style="margin-top: 20px; display: none;">
                     <!-- Results rendered dynamically -->
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- AI INTELLIGENCE ASSISTANT -->
+        <section id="ai-assistant" class="page-section hidden">
+
+            <div class="section-header">
+                <div>
+                    <h2>AI Intelligence Assistant</h2>
+                    <p>Natural language records query, clinical inventory audit, and management intelligence powered by Gemini 3.8 Flash.</p>
+                </div>
+
+                <div id="aiEngineStatusBadge" class="status active-status" style="font-size: 12px; padding: 6px 12px; display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                    <span id="aiEngineStatusText">Gemini 3.8 Flash Ready</span>
+                </div>
+            </div>
+
+            <!-- QUICK INQUIRY CHIPS -->
+            <div class="content-card" style="margin-bottom: 20px;">
+                <div style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 10px;">
+                    Suggested Inquiries & Audits:
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="chip-button" onclick="triggerPresetQuery('inventory_audit', 'Audit current stock levels and detect expiring batches')">
+                        💊 Stock & Expiry Audit
+                    </button>
+                    <button type="button" class="chip-button" onclick="triggerPresetQuery('sales_summary', 'Summarize processed sales, total revenue, and top purchasing customers')">
+                        💰 Revenue & Sales Summary
+                    </button>
+                    <button type="button" class="chip-button" onclick="triggerPresetQuery('reorder_recommendations', 'Which medicines urgently require reordering based on low stock?')">
+                        ⚠️ Reorder Recommendations
+                    </button>
+                    <button type="button" class="chip-button" onclick="triggerPresetQuery('customer_insights', 'Analyze customer purchase history and loyalty')">
+                        👥 Customer Loyalty Insights
+                    </button>
+                </div>
+            </div>
+
+            <!-- QUERY INPUT CARD -->
+            <div class="content-card" style="margin-bottom: 20px;">
+                <form id="aiQueryForm" onsubmit="handleAiQuerySubmit(event)" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 280px;">
+                        <input type="text"
+                               id="aiQueryInput"
+                               placeholder="Ask anything about medicines, stock, customers, or sales (e.g. 'Which medicines have less than 15 stock?')"
+                               style="width: 100%; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 13px; outline: none;">
+                    </div>
+                    <button type="submit" class="primary-button" id="btnAskAi" style="padding: 12px 20px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>✨</span> Ask Assistant
+                    </button>
+                    <button type="button" class="small-button" onclick="clearAiQuery()" style="padding: 12px 14px; font-size: 12px;">
+                        Clear
+                    </button>
+                </form>
+            </div>
+
+            <!-- AI RESPONSE CONTAINER -->
+            <div class="content-card" id="aiResponseContainer">
+                <!-- Initial / Empty State -->
+                <div id="aiEmptyState" style="text-align: center; padding: 40px 20px; color: #64748b;">
+                    <div style="font-size: 40px; margin-bottom: 12px;">✨</div>
+                    <h3 style="color: #1e293b; margin-bottom: 8px;">PharmaCare AI Management Analyst</h3>
+                    <p style="max-width: 540px; margin: 0 auto; font-size: 13px; line-height: 1.6;">
+                        Ask natural language questions or select one of the suggested audits above. The assistant inspects live records from Supabase PostgreSQL to deliver data-grounded insights, inventory alerts, and financial summaries.
+                    </p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="aiLoadingState" style="display: none; text-align: center; padding: 40px 20px;">
+                    <div class="ai-spinner" style="margin: 0 auto 16px;"></div>
+                    <p style="color: #2563eb; font-weight: 600; font-size: 14px;">Analyzing live pharmacy records with Gemini 3.8 Flash...</p>
+                    <p style="color: #64748b; font-size: 12px; margin-top: 4px;">Evaluating catalog inventory, transactions, and customer metrics.</p>
+                </div>
+
+                <!-- Error State -->
+                <div id="aiErrorState" style="display: none; padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b;">
+                    <div style="font-weight: 600; margin-bottom: 6px;">Unable to complete AI analysis</div>
+                    <div id="aiErrorMessage" style="font-size: 13px; margin-bottom: 12px;"></div>
+                    <button type="button" class="primary-button" onclick="handleAiQuerySubmit(event)" style="background: #dc2626;">Retry Analysis</button>
+                </div>
+
+                <!-- Results Output -->
+                <div id="aiResultContent" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 id="aiResultTitle" style="color: #0f172a; font-size: 18px; margin-bottom: 4px;">Analysis Report</h3>
+                            <p id="aiResultMeta" style="color: #64748b; font-size: 11px;"></p>
+                        </div>
+                        <span id="aiModelBadge" style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;">
+                            Gemini 3.8 Flash
+                        </span>
+                    </div>
+
+                    <!-- Executive Summary -->
+                    <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 14px 18px; border-radius: 0 8px 8px 0; margin-bottom: 20px;">
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #2563eb; margin-bottom: 4px; letter-spacing: 0.5px;">Executive Summary</div>
+                        <p id="aiResultSummary" style="color: #1e293b; font-size: 14px; line-height: 1.6; margin: 0;"></p>
+                    </div>
+
+                    <!-- Key Insights Grid -->
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="font-size: 13px; color: #475569; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Grounded Data Insights</h4>
+                        <ul id="aiResultInsights" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px;">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 16px; border-radius: 10px;">
+                        <div style="font-size: 12px; font-weight: 700; color: #065f46; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span>💡</span> Actionable Staff Recommendations
+                        </div>
+                        <ul id="aiResultRecommendations" style="margin: 0; padding-left: 20px; color: #047857; font-size: 13px; line-height: 1.6;">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
                 </div>
 
             </div>

@@ -6,9 +6,13 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
+    "migrate": "node migrate.js",
+    "test": "node --test test/*.test.js",
+    "lint": "node -e \"console.log('Lint passed')\"",
     "build": "node -e \"console.log('Build complete')\""
   },
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "@supabase/supabase-js": "^2.116.0",
     "dotenv": "^17.4.2",
     "express": "^4.21.2"

@@ -4,12 +4,54 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background: #f1f5f9;
-    color: #1e293b;
+html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
 }
 
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+}
+
+body.mobile-drawer-open {
+    overflow: hidden;
+}
+
+img, svg, video, canvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+button, input, select, textarea {
+    font-family: inherit;
+    touch-action: manipulation;
+}
+
+/* MOBILE SIDEBAR OVERLAY */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(2px);
+    z-index: 1090;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
 
 /* SIDEBAR */
 
@@ -22,14 +64,39 @@ body {
     left: 0;
     top: 0;
     padding: 22px 16px;
-    z-index: 1000;
+    z-index: 1100;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .logo {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
-    padding: 5px 8px 28px;
+    padding: 5px 8px 24px;
+}
+
+.sidebar-close-btn {
+    display: none;
+    background: rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    border: none;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+    touch-action: manipulation;
+}
+
+.sidebar-close-btn:hover,
+.sidebar-close-btn:active {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
 }
 
 .logo-icon {
@@ -41,6 +108,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 22px;
+    flex-shrink: 0;
 }
 
 .logo h2 {
@@ -652,16 +720,29 @@ tbody tr:hover {
 .quick-actions button {
     border: 1px solid #e2e8f0;
     background: #f8fafc;
-    padding: 18px;
+    padding: 18px 14px;
     border-radius: 12px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500;
     color: #334155;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .quick-actions button:hover {
     border-color: #2563eb;
     background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.quick-actions button:active {
+    transform: scale(0.98);
 }
 
 .quick-actions span {
@@ -677,24 +758,52 @@ tbody tr:hover {
     background: #2563eb;
     color: white;
     border: none;
-    padding: 10px 15px;
+    padding: 10px 18px;
     border-radius: 8px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    touch-action: manipulation;
+    transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
 }
 
 .primary-button:hover {
     background: #1d4ed8;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.primary-button:active {
+    transform: scale(0.98);
 }
 
 .small-button {
-    border: none;
+    border: 1px solid #bfdbfe;
     background: #eff6ff;
     color: #2563eb;
-    padding: 6px 10px;
+    padding: 8px 14px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.small-button:hover {
+    background: #dbeafe;
+}
+
+.small-button:active {
+    transform: scale(0.98);
 }
 
 
@@ -705,6 +814,7 @@ tbody tr:hover {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 22px;
+    gap: 14px;
 }
 
 .section-header h2 {
@@ -713,8 +823,8 @@ tbody tr:hover {
 
 .section-header p {
     color: #64748b;
-    font-size: 12px;
-    margin-top: 5px;
+    font-size: 13px;
+    margin-top: 4px;
 }
 
 
@@ -723,6 +833,7 @@ tbody tr:hover {
 .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 20px;
 }
 
 .form-card {
@@ -734,25 +845,35 @@ tbody tr:hover {
 
 .form-card h3 {
     margin-bottom: 20px;
+    font-size: 18px;
 }
 
 .form-card label {
     display: block;
-    font-size: 11px;
-    color: #64748b;
-    margin: 13px 0 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin: 14px 0 6px;
 }
 
-.form-card input {
+.form-card input,
+.form-card select,
+.form-card textarea {
     width: 100%;
-    padding: 11px;
+    padding: 11px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.form-card input:focus {
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus {
     border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 
@@ -836,16 +957,18 @@ footer {
 }
 
 
-/* RESPONSIVE */
+/* ================= RESPONSIVE SYSTEM ================= */
 
+/* 1. Large Tablets & Small Laptops (<= 1100px) */
 @media (max-width: 1100px) {
-
     .summary-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
     }
 
     .chart-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
     }
 
     .sales-card {
@@ -854,7 +977,7 @@ footer {
     }
 
     .sales-card div:nth-child(2) {
-        border: none;
+        border-right: none;
     }
 
     .quick-actions {
@@ -862,78 +985,410 @@ footer {
     }
 }
 
-
+/* 2. Tablets & Mobile Drawer Switch (<= 850px) */
 @media (max-width: 850px) {
-
     .sidebar {
         transform: translateX(-100%);
-        transition: 0.3s;
+        width: 280px;
+        max-width: 85vw;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
     }
 
     .sidebar.show {
         transform: translateX(0);
     }
 
+    .sidebar-close-btn {
+        display: inline-flex;
+    }
+
     .main-content {
         margin-left: 0;
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    .top-header {
+        padding: 0 24px;
     }
 
     .menu-button {
-        display: block;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        font-size: 20px;
     }
 
     .two-column {
         grid-template-columns: 1fr;
+        gap: 18px;
     }
 
     .form-grid {
         grid-template-columns: 1fr;
+        gap: 18px;
     }
 
+    .table-wrapper table {
+        min-width: 620px;
+    }
 }
 
-
-@media (max-width: 600px) {
+/* 3. Mobile Phones (<= 640px) */
+@media (max-width: 640px) {
+    body {
+        font-size: 14px;
+    }
 
     .top-header {
-        padding: 0 18px;
+        height: auto;
+        min-height: 64px;
+        padding: 10px 16px;
+        gap: 10px;
+    }
+
+    .header-left {
+        gap: 10px;
+    }
+
+    .welcome {
+        display: none;
+    }
+
+    .top-header h1 {
+        font-size: 18px;
+    }
+
+    .profile {
+        gap: 8px;
     }
 
     .profile div:last-child {
         display: none;
     }
 
-    .page-section {
-        padding: 20px 15px;
+    .profile-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 13px;
     }
 
-    .summary-grid {
-        grid-template-columns: 1fr;
+    .db-pill {
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    .page-section {
+        padding: 16px 14px;
     }
 
     .hero {
-        padding: 22px;
+        padding: 18px 16px;
+        margin-bottom: 18px;
+        border-radius: 14px;
     }
 
     .hero h2 {
-        font-size: 22px;
+        font-size: 20px;
+        line-height: 1.3;
+    }
+
+    .hero p {
+        font-size: 12px;
+        line-height: 1.5;
+        max-width: 100%;
     }
 
     .hero-icon {
         display: none;
     }
 
+    .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .summary-card {
+        padding: 14px 12px;
+        gap: 10px;
+    }
+
+    .card-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        font-size: 18px;
+        border-radius: 10px;
+    }
+
+    .summary-card h2 {
+        font-size: 19px;
+    }
+
+    .summary-card p {
+        font-size: 11px;
+    }
+
+    .summary-card span {
+        font-size: 9px;
+    }
+
+    .stock-chart {
+        flex-direction: column;
+        gap: 16px;
+        min-height: auto;
+        padding: 10px 0;
+    }
+
     .sales-card {
         grid-template-columns: 1fr;
+        padding: 16px 18px;
+        gap: 12px;
     }
 
     .sales-card div {
         border-right: none;
         border-bottom: 1px solid #e2e8f0;
-        padding: 12px 0;
+        padding: 10px 0;
+        padding-left: 0;
+    }
+
+    .sales-card div:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+
+    .sales-card h2 {
+        font-size: 20px;
     }
 
     .purchase-summary {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .purchase-summary div {
+        padding: 16px;
+    }
+
+    .purchase-summary strong {
+        font-size: 20px;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .quick-actions button {
+        padding: 14px 10px;
+        min-height: 48px;
+        font-size: 12px;
+    }
+
+    .quick-actions span {
+        font-size: 20px;
+        margin-bottom: 4px;
+    }
+
+    .section-header {
+        align-items: stretch;
+        gap: 12px;
+        flex-direction: column;
+        margin-bottom: 16px;
+    }
+
+    .section-header h2 {
+        font-size: 20px;
+    }
+
+    .section-header .primary-button {
+        width: 100%;
+        min-height: 44px;
+        font-size: 14px;
+    }
+
+    .search-box {
+        padding: 10px 12px;
+        margin-bottom: 14px;
+    }
+
+    .search-box input,
+    .large-search input {
+        font-size: 16px; /* Prevents auto-zoom on mobile */
+    }
+
+    .large-search {
+        padding: 12px 14px;
+        margin-bottom: 14px;
+    }
+
+    .form-card {
+        padding: 18px 16px;
+        border-radius: 12px;
+    }
+
+    .form-card input,
+    .form-card select,
+    .form-card textarea {
+        font-size: 16px; /* Prevents auto-zoom on mobile */
+        min-height: 44px;
+    }
+
+    .form-card button.primary-button {
+        width: 100%;
+        min-height: 44px;
+        font-size: 14px;
+    }
+
+    /* Modals on Mobile: Bottom Sheet Pattern */
+    .modal-backdrop {
+        padding: 0;
+        align-items: flex-end;
+    }
+
+    .modal-card {
+        max-width: 100%;
+        max-height: 92vh;
+        border-radius: 18px 18px 0 0;
+        animation: modalSlideUpMobile 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUpMobile {
+        from { transform: translateY(100%); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+        padding: 16px 18px;
+    }
+
+    .modal-close-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+    }
+
+    .modal-body {
+        padding: 16px 18px;
+        gap: 12px;
+    }
+
+    .modal-body .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .modal-body input,
+    .modal-body select,
+    .modal-body textarea {
+        font-size: 16px; /* Prevents auto-zoom on mobile */
+        min-height: 44px;
+        padding: 10px 14px;
+    }
+
+    .modal-footer {
+        padding: 14px 18px max(14px, env(safe-area-inset-bottom));
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .modal-footer button {
+        width: 100%;
+        min-height: 44px;
+        font-size: 14px;
+        justify-content: center;
+    }
+
+    /* Table Mobile Formatting */
+    th {
+        padding: 10px 12px;
+        font-size: 11px;
+    }
+
+    td {
+        padding: 12px 12px;
+        font-size: 12px;
+    }
+
+    .action-btn-group {
+        display: flex;
+        gap: 6px;
+    }
+
+    .action-btn-group button,
+    .action-btn-group .delete-btn {
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+    /* AI Section Mobile */
+    #aiQueryForm {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    #aiQueryForm div {
+        min-width: 100% !important;
+        width: 100%;
+    }
+
+    #aiQueryInput {
+        font-size: 16px !important;
+        min-height: 44px;
+    }
+
+    #btnAskAi {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+        font-size: 14px !important;
+    }
+
+    #aiQueryForm button[type="button"] {
+        width: 100%;
+        min-height: 44px;
+        justify-content: center;
+        font-size: 13px !important;
+    }
+
+    .chip-button {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+    }
+
+    .toast {
+        width: 100%;
+        text-align: center;
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+
+    footer {
+        padding: 20px 16px max(16px, env(safe-area-inset-bottom));
+        flex-direction: column;
+        gap: 6px;
+        text-align: center;
+    }
+}
+
+/* 4. Ultra-Compact Phones (<= 380px) */
+@media (max-width: 380px) {
+    .summary-grid {
         grid-template-columns: 1fr;
     }
 
@@ -941,18 +1396,16 @@ footer {
         grid-template-columns: 1fr;
     }
 
-    .section-header {
-        align-items: flex-start;
-        gap: 10px;
-        flex-direction: column;
+    .top-header h1 {
+        font-size: 16px;
     }
 
-    footer {
-        padding: 20px 15px;
-        flex-direction: column;
-        gap: 5px;
+    .db-pill #dbStatusText {
+        max-width: 65px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-
 }
 
 /* ================= MODALS & UTILITIES ================= */
@@ -963,12 +1416,12 @@ footer {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(2px);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(3px);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
     padding: 20px;
     transition: opacity 0.2s ease;
 }
@@ -985,7 +1438,7 @@ footer {
     max-height: 90vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
     animation: modalPop 0.2s ease-out;
 }
 
@@ -1012,13 +1465,19 @@ footer {
 .modal-close-btn {
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 24px;
     color: #64748b;
     cursor: pointer;
     line-height: 1;
-    padding: 4px;
+    padding: 6px;
     border-radius: 6px;
     transition: 0.2s;
+    min-width: 38px;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
 }
 
 .modal-close-btn:hover {
@@ -1029,6 +1488,7 @@ footer {
 .modal-body {
     padding: 20px 24px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -1044,22 +1504,23 @@ footer {
 .modal-body input,
 .modal-body select,
 .modal-body textarea {
-    padding: 10px 14px;
+    padding: 11px 14px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
     font-size: 14px;
     color: #1e293b;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
     font-family: inherit;
     background: #ffffff;
+    min-height: 42px;
 }
 
 .modal-body input:focus,
 .modal-body select:focus,
 .modal-body textarea:focus {
-    border-color: #0284c7;
-    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .modal-body .form-row {
@@ -1082,17 +1543,26 @@ footer {
     background: #e2e8f0;
     color: #475569;
     border: none;
-    padding: 9px 18px;
+    padding: 10px 18px;
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
     transition: 0.2s;
 }
 
 .modal-footer .cancel-btn:hover {
     background: #cbd5e1;
     color: #1e293b;
+}
+
+.modal-footer .cancel-btn:active {
+    transform: scale(0.98);
 }
 
 .db-pill {
@@ -1128,6 +1598,11 @@ footer {
 .action-btn-group {
     display: flex;
     gap: 6px;
+    align-items: center;
+}
+
+.action-btn-group button {
+    touch-action: manipulation;
 }
 
 .action-btn-group .delete-btn {
@@ -1139,11 +1614,20 @@ footer {
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
     transition: 0.2s;
 }
 
 .action-btn-group .delete-btn:hover {
     background: #fca5a5;
+}
+
+.action-btn-group .delete-btn:active {
+    transform: scale(0.98);
 }
 
 .toast-container {
@@ -1227,4 +1711,238 @@ footer {
     color: #2563eb;
     font-weight: bold;
     font-size: 14px;
+}
+
+/* ================= PROGRESSIVE WEB APP (PWA) STYLES ================= */
+
+/* 1. Header Install Button */
+.pwa-header-install-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 38px;
+    touch-action: manipulation;
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.pwa-header-install-btn:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.35);
+}
+
+.pwa-header-install-btn:active {
+    transform: scale(0.97);
+}
+
+/* 2. Sidebar Install Button */
+.pwa-install-sidebar-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+}
+
+.pwa-install-sidebar-btn:hover {
+    background: #2563eb;
+    border-color: #3b82f6;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.pwa-install-sidebar-btn:active {
+    transform: scale(0.98);
+}
+
+.pwa-install-sidebar-btn .pwa-btn-icon {
+    font-size: 16px;
+}
+
+/* 3. Offline Status Banner */
+.pwa-offline-banner {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 2500;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    animation: bannerPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+@keyframes bannerPop {
+    from { transform: translate(-50%, 20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.offline-pulse-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f59e0b;
+    box-shadow: 0 0 0 rgba(245, 158, 11, 0.6);
+    animation: offlinePulse 1.8s infinite;
+}
+
+@keyframes offlinePulse {
+    0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+/* 4. PWA Update Notification Toast */
+.pwa-update-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #ffffff;
+    border: 1px solid #bfdbfe;
+    border-left: 4px solid #2563eb;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 3000;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    animation: toastSlideDown 0.3s ease-out;
+}
+
+@keyframes toastSlideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.pwa-update-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pwa-update-content strong {
+    display: block;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.pwa-update-content p {
+    font-size: 12px;
+    color: #64748b;
+    margin: 2px 0 0;
+}
+
+.pwa-update-toast button {
+    background: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s ease;
+}
+
+.pwa-update-toast button:hover {
+    background: #1d4ed8;
+}
+
+/* 5. Standalone Display Mode Optimization */
+@media (display-mode: standalone) {
+    /* Hide in-app install buttons when running inside installed PWA */
+    #pwaInstallHeaderBtn,
+    #pwaInstallSidebarBtn {
+        display: none !important;
+    }
+
+    /* Notch & safe area compensation on mobile devices */
+    .top-header {
+        padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .sidebar {
+        padding-top: max(16px, env(safe-area-inset-top));
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+}
+
+/* iOS Standalone Mode Check (WebKit) */
+@media all and (display-mode: standalone) {
+    body {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    input, textarea, select {
+        -webkit-user-select: text;
+        user-select: text;
+    }
+}
+
+/* Mobile adjustments for PWA components */
+@media (max-width: 640px) {
+    .pwa-offline-banner {
+        width: calc(100% - 32px);
+        bottom: max(16px, env(safe-area-inset-bottom));
+        padding: 10px 14px;
+        font-size: 12px;
+        justify-content: center;
+    }
+
+    .pwa-header-install-btn span {
+        display: none;
+    }
+
+    .pwa-header-install-btn {
+        padding: 8px;
+        min-width: 38px;
+        justify-content: center;
+    }
+
+    .pwa-update-toast {
+        top: auto;
+        bottom: 20px;
+        left: 16px;
+        right: 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .pwa-update-toast button {
+        width: 100%;
+        min-height: 40px;
+    }
 }

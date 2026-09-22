@@ -53,10 +53,7 @@ function showSection(sectionId) {
     });
 
     // Close sidebar on mobile
-    const sidebar = document.getElementById("sidebar");
-    if (sidebar) {
-        sidebar.classList.remove("show");
-    }
+    toggleSidebar(false);
 
     // Load data specific to the section
     if (sectionId === "dashboard") loadDashboard();
@@ -69,10 +66,20 @@ function showSection(sectionId) {
 }
 
 /* SIDEBAR TOGGLE */
-function toggleSidebar() {
+function toggleSidebar(forceState) {
     const sidebar = document.getElementById("sidebar");
-    if (sidebar) {
-        sidebar.classList.toggle("show");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (!sidebar) return;
+
+    const willShow = (forceState !== undefined) ? !!forceState : !sidebar.classList.contains("show");
+    if (willShow) {
+        sidebar.classList.add("show");
+        if (overlay) overlay.classList.add("show");
+        document.body.classList.add("mobile-drawer-open");
+    } else {
+        sidebar.classList.remove("show");
+        if (overlay) overlay.classList.remove("show");
+        document.body.classList.remove("mobile-drawer-open");
     }
 }
 
@@ -838,9 +845,9 @@ async function globalSearch() {
                         <h4 style="margin-bottom: 8px; color: #0284c7;">💊 Medicines (${data.medicines.length})</h4>
                         <ul style="list-style: none; padding-left: 0;">
                             ${data.medicines.map(m => `
-                                <li style="padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+                                <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                                     <span><strong>${m.id}</strong>: ${escapeHtml(m.name)} (${m.category})</span>
-                                    <span>Stock: <strong>${m.stock}</strong> | ₹${m.price}</span>
+                                    <span style="font-size: 12px; color: #475569;">Stock: <strong>${m.stock}</strong> | ₹${m.price}</span>
                                 </li>
                             `).join("")}
                         </ul>
@@ -854,9 +861,9 @@ async function globalSearch() {
                         <h4 style="margin-bottom: 8px; color: #7c3aed;">👥 Customers (${data.customers.length})</h4>
                         <ul style="list-style: none; padding-left: 0;">
                             ${data.customers.map(c => `
-                                <li style="padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+                                <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                                     <span><strong>${c.id}</strong>: ${escapeHtml(c.name)} (${escapeHtml(c.address)})</span>
-                                    <span>${c.purchase_count} purchases | ₹${Number(c.total_purchase).toLocaleString()}</span>
+                                    <span style="font-size: 12px; color: #475569;">${c.purchase_count} purchases | ₹${Number(c.total_purchase).toLocaleString()}</span>
                                 </li>
                             `).join("")}
                         </ul>
@@ -870,9 +877,9 @@ async function globalSearch() {
                         <h4 style="margin-bottom: 8px; color: #059669;">🛒 Purchases (${data.purchases.length})</h4>
                         <ul style="list-style: none; padding-left: 0;">
                             ${data.purchases.map(p => `
-                                <li style="padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+                                <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                                     <span><strong>${p.id}</strong>: ${escapeHtml(p.customer_name)} - ${escapeHtml(p.medicine)} (${p.quantity} units)</span>
-                                    <span>₹${Number(p.amount).toLocaleString()} (${escapeHtml(p.date)})</span>
+                                    <span style="font-size: 12px; color: #475569;">₹${Number(p.amount).toLocaleString()} (${escapeHtml(p.date)})</span>
                                 </li>
                             `).join("")}
                         </ul>
@@ -886,9 +893,9 @@ async function globalSearch() {
                         <h4 style="margin-bottom: 8px; color: #d97706;">💰 Invoices / Bills (${data.sales.length})</h4>
                         <ul style="list-style: none; padding-left: 0;">
                             ${data.sales.map(s => `
-                                <li style="padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between;">
+                                <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
                                     <span><strong>${s.id}</strong>: ${escapeHtml(s.customer_name)} (${s.items_count} items)</span>
-                                    <span>₹${Number(s.amount).toFixed(2)} (${escapeHtml(s.payment_method)})</span>
+                                    <span style="font-size: 12px; color: #475569;">₹${Number(s.amount).toFixed(2)} (${escapeHtml(s.payment_method)})</span>
                                 </li>
                             `).join("")}
                         </ul>
@@ -1063,8 +1070,175 @@ function renderAiResult(data, meta) {
     }
 }
 
+/* ==========================================================
+   PROGRESSIVE WEB APP (PWA) CONTROLLER
+   - Service Worker Registration & Background Sync
+   - Installation Prompts (Android, Desktop & iOS Safari)
+   - Online / Offline Status Synchronization
+   ========================================================== */
+
+let pwaDeferredPrompt = null;
+let pwaRegistration = null;
+
+function initPWA() {
+    // 1. Check standalone display mode
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                         (window.navigator && window.navigator.standalone === true);
+
+    const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+    const headerInstallBtn = document.getElementById('pwaInstallHeaderBtn');
+    const sidebarInstallBtn = document.getElementById('pwaInstallSidebarBtn');
+
+    // 2. Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                .then((registration) => {
+                    pwaRegistration = registration;
+                    console.log('[PWA] Service Worker registered with scope:', registration.scope);
+
+                    // Check for waiting worker
+                    if (registration.waiting) {
+                        showPwaUpdateToast();
+                    }
+
+                    // Detect updates to service worker
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        if (!newWorker) return;
+
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showPwaUpdateToast();
+                            }
+                        });
+                    });
+                })
+                .catch((err) => {
+                    console.warn('[PWA] Service Worker registration failed:', err);
+                });
+
+            // Reload page when new service worker takes control
+            let refreshing = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (!refreshing) {
+                    refreshing = true;
+                    window.location.reload();
+                }
+            });
+        });
+    }
+
+    // 3. Handle beforeinstallprompt (Chromium / Edge / Android)
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        pwaDeferredPrompt = e;
+
+        // Show install buttons unless already running standalone
+        if (!isStandalone) {
+            if (headerInstallBtn) headerInstallBtn.classList.remove('hidden');
+            if (sidebarInstallBtn) sidebarInstallBtn.classList.remove('hidden');
+        }
+    });
+
+    // 4. Handle iOS Safari device detection
+    if (isIOS && !isStandalone) {
+        if (headerInstallBtn) {
+            headerInstallBtn.classList.remove('hidden');
+            headerInstallBtn.title = "Install on iPhone/iPad";
+        }
+        if (sidebarInstallBtn) {
+            sidebarInstallBtn.classList.remove('hidden');
+            sidebarInstallBtn.title = "Install on iPhone/iPad";
+        }
+    }
+
+    // 5. Handle appinstalled event
+    window.addEventListener('appinstalled', () => {
+        console.log('[PWA] PharmaCare installed successfully');
+        pwaDeferredPrompt = null;
+        if (headerInstallBtn) headerInstallBtn.classList.add('hidden');
+        if (sidebarInstallBtn) sidebarInstallBtn.classList.add('hidden');
+        showToast("PharmaCare installed! Launch anytime from your apps or home screen.");
+    });
+
+    // 6. Online / Offline network listeners
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOfflineStatus);
+
+    if (!navigator.onLine) {
+        handleOfflineStatus();
+    }
+}
+
+/* User triggers install prompt */
+async function triggerPwaInstall() {
+    const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+
+    if (pwaDeferredPrompt) {
+        pwaDeferredPrompt.prompt();
+        const choice = await pwaDeferredPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+            console.log('[PWA] User accepted install prompt');
+            showToast("Installing PharmaCare...");
+            const headerBtn = document.getElementById('pwaInstallHeaderBtn');
+            const sidebarBtn = document.getElementById('pwaInstallSidebarBtn');
+            if (headerBtn) headerBtn.classList.add('hidden');
+            if (sidebarBtn) sidebarBtn.classList.add('hidden');
+        } else {
+            console.log('[PWA] User dismissed install prompt');
+        }
+        pwaDeferredPrompt = null;
+    } else if (isIOS) {
+        openModal('iosInstallModal');
+    } else {
+        showToast("To install, look for the install icon (⊕) in your browser address bar.");
+    }
+}
+
+/* Online / Offline status handling */
+function handleOfflineStatus() {
+    const banner = document.getElementById('offlineBanner');
+    if (banner) {
+        banner.classList.remove('hidden');
+    }
+    showToast("Offline Mode: Serving cached inventory & records.");
+}
+
+function handleOnlineStatus() {
+    const banner = document.getElementById('offlineBanner');
+    if (banner) {
+        banner.classList.add('hidden');
+    }
+    showToast("Online: Reconnected to database. Synchronizing data...");
+    fetchDbStatus();
+    // Refresh current view if possible
+    loadDashboard();
+}
+
+/* PWA Update available banner */
+function showPwaUpdateToast() {
+    const toast = document.getElementById('pwaUpdateToast');
+    if (toast) {
+        toast.classList.remove('hidden');
+    }
+}
+
+function reloadPwaApp() {
+    if (pwaRegistration && pwaRegistration.waiting) {
+        pwaRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+        window.location.reload();
+    }
+}
+
+window.triggerPwaInstall = triggerPwaInstall;
+window.reloadPwaApp = reloadPwaApp;
+
 /* PAGE INITIALIZATION */
 document.addEventListener("DOMContentLoaded", function() {
     fetchDbStatus();
     showSection("dashboard");
+    initPWA();
 });

@@ -13,6 +13,19 @@ const PORT = 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Explicit PWA service worker and manifest endpoints
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(__dirname, 'frontend', 'sw.js'));
+});
+
+app.get(['/manifest.webmanifest', '/manifest.json'], (req, res) => {
+  res.setHeader('Content-Type', 'application/manifest+json; charset=UTF-8');
+  res.sendFile(path.join(__dirname, 'frontend', 'manifest.webmanifest'));
+});
+
 // Serve static files from the frontend folder
 app.use(express.static(path.join(__dirname, 'frontend')));
 

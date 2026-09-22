@@ -2,27 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <title>PharmaCare - Pharmacy Management System</title>
     <meta name="description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing.">
     <meta property="og:title" content="PharmaCare - Pharmacy Management System">
     <meta property="og:description" content="Pharmacy management system for managing medicines, customers, purchases, stock, and billing.">
 
+    <!-- Progressive Web App (PWA) Manifest & Meta Tags -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PharmaCare">
+    <meta name="application-name" content="PharmaCare">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/pwa-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+    <link rel="shortcut icon" href="/favicon.ico">
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+    <!-- MOBILE SIDEBAR OVERLAY -->
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar(false)" aria-label="Close Navigation Backdrop"></div>
+
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
 
         <div class="logo">
-            <div class="logo-icon">💊</div>
-            <div>
-                <h2>PharmaCare</h2>
-                <p>Management System</p>
+            <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
+                <div class="logo-icon">💊</div>
+                <div>
+                    <h2>PharmaCare</h2>
+                    <p>Management System</p>
+                </div>
             </div>
+            <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="toggleSidebar(false)" aria-label="Close navigation menu">✕</button>
         </div>
 
         <nav class="navigation">
@@ -69,6 +93,13 @@
 
         </nav>
 
+        <div style="padding: 12px 14px 6px;">
+            <button id="pwaInstallSidebarBtn" class="pwa-install-sidebar-btn hidden" onclick="triggerPwaInstall()" title="Install PharmaCare app">
+                <span class="pwa-btn-icon">📲</span>
+                <span class="pwa-btn-text">Install App</span>
+            </button>
+        </div>
+
         <div class="sidebar-bottom">
             <p>Database: <strong id="sidebarDbMode">PostgreSQL</strong></p>
             <strong>Pharmacy Staff Portal</strong>
@@ -96,7 +127,16 @@
 
             </div>
 
-            <div class="profile" style="display: flex; align-items: center; gap: 14px;">
+            <div class="profile" style="display: flex; align-items: center; gap: 12px;">
+                <button id="pwaInstallHeaderBtn" class="pwa-header-install-btn hidden" onclick="triggerPwaInstall()" title="Install PharmaCare on this device">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Install App</span>
+                </button>
+
                 <div id="dbStatusBadge" class="db-pill waiting" title="Supabase PostgreSQL Connection">
                     <span class="db-dot"></span>
                     <span id="dbStatusText">Checking DB...</span>
@@ -1158,6 +1198,54 @@
 
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
+
+    <!-- PWA Offline Status Banner -->
+    <div id="offlineBanner" class="pwa-offline-banner hidden" role="status" aria-live="polite">
+        <span class="offline-pulse-dot"></span>
+        <span id="offlineBannerText">Offline Mode &bull; Cached pharmacy catalog active</span>
+    </div>
+
+    <!-- PWA App Update Toast -->
+    <div id="pwaUpdateToast" class="pwa-update-toast hidden" role="alert">
+        <div class="pwa-update-content">
+            <span style="font-size: 20px;">🚀</span>
+            <div>
+                <strong>Update Available</strong>
+                <p>A fresh version of PharmaCare is ready.</p>
+            </div>
+        </div>
+        <button id="pwaReloadBtn" onclick="reloadPwaApp()">Update</button>
+    </div>
+
+    <!-- iOS Safari Installation Guide Modal -->
+    <div id="iosInstallModal" class="modal-backdrop hidden">
+        <div class="modal-card" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3>Install on iPhone &amp; iPad</h3>
+                <button class="modal-close-btn" onclick="closeModal('iosInstallModal')">&times;</button>
+            </div>
+            <div class="modal-body" style="font-size: 14px; line-height: 1.6; color: #334155;">
+                <p style="margin-bottom: 12px; color: #64748b;">Install PharmaCare to your home screen for quick offline access and native standalone experience:</p>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                        <span style="background: #2563eb; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;">1</span>
+                        <span>Tap the <strong>Share</strong> button <svg style="display:inline-block; vertical-align:middle; width:18px; height:18px; margin: 0 2px;" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> in Safari's bottom toolbar.</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                        <span style="background: #2563eb; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;">2</span>
+                        <span>Scroll down the action sheet and select <strong>Add to Home Screen</strong> <svg style="display:inline-block; vertical-align:middle; width:18px; height:18px; margin: 0 2px;" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>.</span>
+                    </div>
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                        <span style="background: #2563eb; color: #fff; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0;">3</span>
+                        <span>Confirm by tapping <strong>Add</strong> in the top-right corner.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="primary-button" style="width: 100%; min-height: 44px;" onclick="closeModal('iosInstallModal')">Understood</button>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 

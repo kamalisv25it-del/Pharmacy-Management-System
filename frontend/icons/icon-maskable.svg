@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGradMask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="50%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <linearGradient id="pillGrad1Mask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e0f2fe" />
+    </linearGradient>
+    <linearGradient id="pillGrad2Mask" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="dropShadowMask" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#0f172a" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Full-bleed background for maskable (no corner radius so arbitrary crops like circle/squircle look perfect) -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bgGradMask)" />
+
+  <!-- Inner safe-zone container (centered within 80% circle; diameter approx 410px) -->
+  <g transform="translate(256, 256) scale(0.72) translate(-256, -256)">
+    <!-- Medical Cross with shadow -->
+    <g filter="url(#dropShadowMask)">
+      <rect x="220" y="112" width="72" height="288" rx="24" fill="#ffffff" />
+      <rect x="112" y="220" width="288" height="72" rx="24" fill="#ffffff" />
+    </g>
+
+    <!-- Stylized Angled Capsule Pill Motif -->
+    <g transform="translate(256, 256) rotate(-35) translate(-140, -56)">
+      <path d="M 56 16 A 40 40 0 0 0 56 96 L 140 96 L 140 16 Z" fill="url(#pillGrad1Mask)" />
+      <path d="M 140 16 L 224 16 A 40 40 0 0 1 224 96 L 140 96 Z" fill="url(#pillGrad2Mask)" />
+      <line x1="140" y1="16" x2="140" y2="96" stroke="#0284c7" stroke-width="4" stroke-opacity="0.4" />
+      <path d="M 64 28 Q 140 28 216 28" stroke="#ffffff" stroke-width="6" stroke-linecap="round" stroke-opacity="0.75" fill="none" />
+    </g>
+
+    <!-- Pulse line -->
+    <path d="M 148 376 L 210 376 L 232 344 L 256 408 L 282 356 L 298 376 L 364 376" 
+          fill="none" stroke="#67e8f9" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>
